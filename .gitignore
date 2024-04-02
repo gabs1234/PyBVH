@@ -1,0 +1,5 @@
+.git
+.vscode
+src/blender/*
+src/.vscode/*
+src/__pycache__/

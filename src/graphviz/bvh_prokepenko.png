@@ -1,0 +1,18 @@
+digraph bvh {
+	dpi=300
+	8 [label=8]
+	11 [label=11]
+	12 [label=12]
+	8 -> 11
+	8 -> 12
+	11 [label=11]
+	9 [label=9]
+	10 [label=10]
+	11 -> 9
+	11 -> 10
+	10 [label=10]
+	2 [label=2]
+	12 [label=12]
+	10 -> 2
+	10 -> 12
+}
