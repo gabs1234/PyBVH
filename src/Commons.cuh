@@ -1,6 +1,7 @@
 #pragma once
 
 #define MAX_COLLISIONS 128
+#define EPSILON 0.00001
 
 typedef struct {
     int collisions[MAX_COLLISIONS];
@@ -59,7 +60,7 @@ __device__ inline float xor_signmask(float x, int y)
     return (float)(int(x) ^ y);
 }
 
-__device__ inline float4 sub(float4 a, float4 b)
+__device__ inline float4 sub4(float4 a, float4 b)
 {
     float4 c;
     c.x = a.x - b.x;
@@ -78,6 +79,50 @@ __device__ inline float4 abs4(float4 a)
     c.w = fabs(a.w);
     return c;
 }
+
+__device__ inline float4 min4(float4 a, float4 b)
+{
+    float4 c;
+    c.x = fminf(a.x, b.x);
+    c.y = fminf(a.y, b.y);
+    c.z = fminf(a.z, b.z);
+    c.w = fminf(a.w, b.w);
+    return c;
+}
+
+__device__ inline float4 max4(float4 a, float4 b)
+{
+    float4 c;
+    c.x = fmaxf(a.x, b.x);
+    c.y = fmaxf(a.y, b.y);
+    c.z = fmaxf(a.z, b.z);
+    c.w = fmaxf(a.w, b.w);
+    return c;
+}
+
+__device__ inline float4 cross4 (float4 a, float4 b) // cross product between two 3D vectors
+{ 
+    float4 c;
+    c.x = a.y * b.z - a.z * b.y;
+    c.y = a.z * b.x - a.x * b.z;
+    c.z = a.x * b.y - a.y - b.x;
+    c.w = 0;
+
+    return c;
+}
+
+__device__ inline float dot4(float4 a, float4 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+__device__ inline float4 normalize4(float4 a)
+{
+    float invLen = rsqrtf(dot4(a, a));
+    float norm = 1.0f / invLen;
+    return make_float4(a.x * invLen, a.y * invLen, a.z * invLen, norm);
+}
+
 
 __device__ int maxDimIndex(const float4 &D)
 {

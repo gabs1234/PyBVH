@@ -348,7 +348,7 @@ __device__ void BVHTree::query (Ray &ray, CollisionList &candidates) {
             float4 bbMax = this->leaf_nodes.bbMax[current_node];
             float2 t;
             if (ray.intersects(bbMin, bbMax, t)) {
-                if (candidates.count == MAX_COLLISIONS) {
+                if (candidates.count == 128) {
                     printf ("Max collisions reached %d\n", current_node);
                     return;
                 }

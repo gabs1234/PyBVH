@@ -3,8 +3,11 @@
 #include "tree_prokopenko.cuh"
 #include "Commons.cuh"
 
-__device__ RayTracer::RayTracer(BVHTree *tree, float4 *vertices, unsigned int nbVertices, bool parallel) {
+#include <thrust/sort.h>
+
+__device__ RayTracer::RayTracer(BVHTree *tree, float4 origin, float4 *vertices, unsigned int nbVertices, bool parallel) {
     this->tree = tree;
+    this->origin = origin;
     this->vertices = vertices;
     this->nbVertices = nbVertices;
     this->raySet = 0;
@@ -19,29 +22,7 @@ __device__ float4 RayTracer::sphericalToCartesian(float theta, float phi, float 
     return make_float4(x, y, z, 1.0);
 }
 
-/**
- * Let S be the surface defined by the equation:
- * forall I in S, RI * RO = 0. 
- * Where:
- * - O is the origin of our frame of reference. 
- * - R the origin of the ray (i.e. RO the ray vector)
- * Let (Ix, Iy) be the coordinates of the a point I 
- * in the frame of reference of the image plane. We wish
- * to find the coordinates (x, y, z) of the point I in the
- * frame of reference of the surface S, such that:
- * (RI . RO) = 0 (i.e. I is in S)
- * 
-*/
-__device__ float4 RayTracer::computePointInPlane(float2 &I, float4 &O, float4 &R) {
-    float4 RO = make_float4(O.x - R.x, O.y - R.y, O.z - R.z, 0.0);
-    float2 IR = make_float2(R.x - I.x, R.y - I.y);
-    float4 I_3d;
-    I_3d.x = I.x;
-    I_3d.y = I.y;
-    I_3d.z = (IR.x * RO.x + IR.y * RO.y) / RO.z + R.z;
 
-    return I_3d;
-}
 
 __device__ bool RayTracer::computeRayAABB(float4 &O, float4 &min, float4 &max) {
     float4 sceneBBMin = this->tree->getSceneBBMin();
@@ -57,9 +38,22 @@ __device__ bool RayTracer::computeRayAABB(float4 &O, float4 &min, float4 &max) {
     return false;
 }
 
-// __device__ void RayTracer::computeManifoldThickness (float *image, float *normals, CollisionList &t_values) {
-    
-// } 
+__device__ void RayTracer::rotateBasis (float4 &u1, float4 &u2, float4 &u3, float theta, float phi) {
+    RotationQuaternion rot1(-theta, u1);
+    RotationQuaternion rot2(phi, u3);
+
+    float4 u1p = rot1.rotate(u1);
+    float4 u2p = rot1.rotate(u2);
+    float4 u3p = rot1.rotate(u3);
+
+    u1p = rot2.rotate(u1p);
+    u2p = rot2.rotate(u2p);
+    u3p = rot2.rotate(u3p);
+
+    u1 = u1p;
+    u2 = u2p;
+    u3 = u3p;
+}
 
 __device__ float computeThickness(CollisionList &tvalues) {
     
@@ -90,56 +84,18 @@ __device__ float sumTvalues (CollisionList &t_values) {
     return thickness;
 }
 
-__device__ float RayTracer::traceRayParallel(float2 P, float theta, float phi, float r, float4 origin, CollisionList &t_values) {
-    // int old_val;
-    // if (atomicCAS(&this->raySet, 0, 1) == 0) {
-    //     this->reference_origin = origin;
-    //     this->tail = this->sphericalToCartesian(theta, phi, r);
-    //     this->reference_direction.x = this->reference_origin.x - this->tail.x;
-    //     this->reference_direction.y = this->reference_origin.y - this->tail.y;
-    //     this->reference_direction.z = this->reference_origin.z - this->tail.z;
-    //     float norm = sqrt(this->reference_direction.x * this->reference_direction.x + this->reference_direction.y * this->reference_direction.y + this->reference_direction.z * this->reference_direction.z);
-    //     this->reference_direction.x /= norm;
-    //     this->reference_direction.y /= norm;
-    //     this->reference_direction.z /= norm;
-
-    // }
-
-    // __syncthreads();
+__device__ float RayTracer::traceRayParallel(Ray &ray) {
     
-    
-
-    // printf ("Direction (%f, %f, %f)\n", direction.x, direction.y, direction.z);
-
-    float4 tail = this->sphericalToCartesian(theta, phi, r);
-    
-    float4 direction;
-    direction.x = origin.x - tail.x;
-    direction.y = origin.y - tail.y;
-    direction.z = origin.z - tail.z;
-    float norm = sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
-    direction.x /= norm;
-    direction.y /= norm;
-    direction.z /= norm;
-    
-    // Set the the ray origin to the surface point
-    float4 I = this->computePointInPlane(P, origin, tail);
-
-    // printf ("Direction (%f, %f, %f)\n", this->reference_direction.x, this->reference_direction.y, this->reference_direction.z);
-
-    Ray displaced_ray = Ray(I, direction);
-
-    // displaced_ray.print();
 
     CollisionList candidates;
     candidates.count = 0;
     memset(candidates.collisions, 0, MAX_COLLISIONS * sizeof(float));
 
     // This is where the acceleration structure (BVH) is actually usefull
-    this->tree->query(displaced_ray, candidates);
+    this->tree->query(ray, candidates);
 
     // for (int i = 0; i < candidates.count; i++) {
-    //     t_values.collisions[t_values.count++] += 1;
+    //     candidates.collisions[i] += 1;
     // }
 
     // Test the candidates for actual intersections
@@ -156,20 +112,17 @@ __device__ float RayTracer::traceRayParallel(float2 P, float theta, float phi, f
         float4 V3 = this->vertices[primIndex + 2];
 
         float t;
-        if (displaced_ray.intersects(V1, V2, V3, t)) {
+        if (ray.intersects(V1, V2, V3, t)) {
             // printf("real Collision at %d, %f\n", primIndex, t);
-            t_values.collisions[t_values.count++] = t;
-        }
-        else {
-            // printf("No Collision at %d\n", primIndex);
+            candidates.collisions[i] = t;
         }
     }
 
     // Print the t_values
 
 
-    // Sort the t_values
-    thrust::sort(thrust::device, t_values.collisions, t_values.collisions + t_values.count);
+    // // Sort the t_values
+    // thrust::sort(thrust::device, candidates.collisions, candidates.collisions + candidates.count);
 
     // printf ("t_values count = %d\n", t_values.count);
     // for (int i = 0; i < t_values.count; i++) {
@@ -177,5 +130,5 @@ __device__ float RayTracer::traceRayParallel(float2 P, float theta, float phi, f
     // }
 
     // compute the thickness
-    return sumTvalues(t_values);
+    return candidates.count;
 }

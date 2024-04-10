@@ -42,65 +42,15 @@ class CudaPipeline:
 
         # Prepend cub header
         code = r"""
-        #include <cub/cub.cuh>\n
-        #include <thrust/sort.h>\n
-        #include <thrust/device_vector.h>\n
-        #include <thrust/execution_policy.h>\n
+        #include <cub/cub.cuh>
+        #include <thrust/sort.h>
+        #include <thrust/device_vector.h>
+        #include <thrust/execution_policy.h>
         """
         for fileName in fileNames:
             with open(fileName, "r") as f:
                 source = f.read()
                 code += source + "\n"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         self.modules[moduleName] = cp.RawModule(
             code=code,

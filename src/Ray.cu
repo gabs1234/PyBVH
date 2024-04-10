@@ -112,106 +112,140 @@ __device__ bool Ray::intersects (float4 min, float4 max, float2 &t) {
     return true;
 }
 
-/**
- * S. Woop et al. 2013, "Watertight Ray/Triangle Intersection"
- */
+// /**
+//  * S. Woop et al. 2013, "Watertight Ray/Triangle Intersection"
+//  */
+// __device__ bool Ray::intersects(
+//     float4 &V1, float4 &V2, float4 &V3, float &t)
+// {
+//     // calculate dimension where the ray direction is maximal
+//     float4 dir = this->direction;
+//     const float4 D_abs = abs4(dir);
+//     const int shift = maxDimIndex(D_abs);
+//     // printf ("Shift: %d\n", shift);
+//     float4 D_perm = permuteVectorAlongMaxDim(dir, shift);
+//     // printf ("D_perm: %f %f %f\n", D_perm.x, D_perm.y, D_perm.z);
+
+//     // swap kx and ky dimensions to preserve winding direction of triangles
+//     if (D_perm.z < 0.0f)
+//     {
+//         const float temp = D_perm.x;
+//         D_perm.x = D_perm.y;
+//         D_perm.y = temp;
+//     }
+
+//     /* calculate shear constants */
+//     float Sz = 1.0f / D_perm.z;
+//     float Sx = D_perm.x * Sz;
+//     float Sy = D_perm.y * Sz;
+
+//     // printf("D_perm: %f %f %f\n", D_perm.x, D_perm.y, D_perm.z);
+
+//     /* calculate vertices relative to ray origin */
+//     float4 tail = this->tail;
+//     float4 A = sub4(V1, tail);
+//     float4 B = sub4(V2, tail);
+//     float4 C = sub4(V3, tail);
+
+//     A = permuteVectorAlongMaxDim(A, shift);
+//     B = permuteVectorAlongMaxDim(B, shift);
+//     C = permuteVectorAlongMaxDim(C, shift);
+
+//     // printf ("A: %f %f %f\n", A.x, A.y, A.z);
+//     // printf ("B: %f %f %f\n", B.x, B.y, B.z);
+//     // printf ("C: %f %f %f\n", C.x, C.y, C.z);
+
+//     /* perform shear and scale of vertices */
+//     const float Ax = A.x - Sx * A.z;
+//     const float Ay = A.y - Sy * A.z;
+//     const float Bx = B.x - Sx * B.z;
+//     const float By = B.y - Sy * B.z;
+//     const float Cx = C.x - Sx * C.z;
+//     const float Cy = C.y - Sy * C.z;
+
+//     // calculate scaled barycentric coordinates
+//     float U = Cx * By - Cy * Bx;
+//     float V = Ax * Cy - Ay * Cx;
+//     float W = Bx * Ay - By * Ax;
+
+//     /* fallback to test against edges using double precision  (if float is indeed float) */
+//     if (U == (float)0.0 || V == (float)0.0 || W == (float)0.0)
+//     {
+//         double CxBy = (double)Cx * (double)By;
+//         double CyBx = (double)Cy * (double)Bx;
+//         U = (float)(CxBy - CyBx);
+//         double AxCy = (double)Ax * (double)Cy;
+//         double AyCx = (double)Ay * (double)Cx;
+//         V = (float)(AxCy - AyCx);
+//         double BxAy = (double)Bx * (double)Ay;
+//         double ByAx = (double)By * (double)Ax;
+//         W = (float)(BxAy - ByAx);
+//     }
+
+//     if ((U < (float)0.0 || V < (float)0.0 || W < (float)0.0) &&
+//         (U > (float)0.0 || V > (float)0.0 || W > (float)0.0)){
+//         return false;
+//     }
+
+//     /* calculate determinant */
+//     float det = U + V + W;
+//     if (det == (float)0.0)
+//         return false;
+
+//     // printf("Det: %f\n", det);
+
+//     /* Calculates scaled z-coordinate of vertices and uses them to calculate the hit distance. */
+//     const float Az = Sz * A.z;
+//     const float Bz = Sz * B.z;
+//     const float Cz = Sz * C.z;
+//     const float T = U * Az + V * Bz + W * Cz;
+
+//     const int det_sign_mask = (int(det) & 0x80000000);
+//     const float xort_t = xor_signmask(T, det_sign_mask);
+//     if (xort_t < 0.0f)
+//         return false;
+
+//     // normalize U, V, W, and T
+//     const float rcpDet = 1.0f / det;
+//     // *u = U*rcpDet;
+//     // *v = V*rcpDet;
+//     // *w = W*rcpDet;
+
+//     t = T * rcpDet;
+
+//     return t > 0;
+// }
+
 __device__ bool Ray::intersects(
     float4 &V1, float4 &V2, float4 &V3, float &t)
 {
-    // calculate dimension where the ray direction is maximal
-    float4 dir = this->direction;
-    const float4 D_abs = abs4(dir);
-    const int shift = maxDimIndex(D_abs);
-    // printf ("Shift: %d\n", shift);
-    float4 D_perm = permuteVectorAlongMaxDim(dir, shift);
-    // printf ("D_perm: %f %f %f\n", D_perm.x, D_perm.y, D_perm.z);
+    float4 e_1, e_2, P, Q, T;
+    float det, inv_det, u, v;
 
-    // swap kx and ky dimensions to preserve winding direction of triangles
-    if (D_perm.z < 0.0f)
-    {
-        const float temp = D_perm.x;
-        D_perm.x = D_perm.y;
-        D_perm.y = temp;
-    }
+    e_1 = sub4 (V2, V1);
+    e_2 = sub4 (V3, V1);
+    P = cross4 (this->direction, e_2);
 
-    /* calculate shear constants */
-    float Sz = 1.0f / D_perm.z;
-    float Sx = D_perm.x * Sz;
-    float Sy = D_perm.y * Sz;
-
-    // printf("D_perm: %f %f %f\n", D_perm.x, D_perm.y, D_perm.z);
-
-    /* calculate vertices relative to ray origin */
-    float4 tail = this->tail;
-    float4 A = sub(V1, tail);
-    float4 B = sub(V2, tail);
-    float4 C = sub(V3, tail);
-
-    A = permuteVectorAlongMaxDim(A, shift);
-    B = permuteVectorAlongMaxDim(B, shift);
-    C = permuteVectorAlongMaxDim(C, shift);
-
-    // printf ("A: %f %f %f\n", A.x, A.y, A.z);
-    // printf ("B: %f %f %f\n", B.x, B.y, B.z);
-    // printf ("C: %f %f %f\n", C.x, C.y, C.z);
-
-    /* perform shear and scale of vertices */
-    const float Ax = A.x - Sx * A.z;
-    const float Ay = A.y - Sy * A.z;
-    const float Bx = B.x - Sx * B.z;
-    const float By = B.y - Sy * B.z;
-    const float Cx = C.x - Sx * C.z;
-    const float Cy = C.y - Sy * C.z;
-
-    // calculate scaled barycentric coordinates
-    float U = Cx * By - Cy * Bx;
-    float V = Ax * Cy - Ay * Cx;
-    float W = Bx * Ay - By * Ax;
-
-    /* fallback to test against edges using double precision  (if float is indeed float) */
-    if (U == (float)0.0 || V == (float)0.0 || W == (float)0.0)
-    {
-        double CxBy = (double)Cx * (double)By;
-        double CyBx = (double)Cy * (double)Bx;
-        U = (float)(CxBy - CyBx);
-        double AxCy = (double)Ax * (double)Cy;
-        double AyCx = (double)Ay * (double)Cx;
-        V = (float)(AxCy - AyCx);
-        double BxAy = (double)Bx * (double)Ay;
-        double ByAx = (double)By * (double)Ax;
-        W = (float)(BxAy - ByAx);
-    }
-
-    if ((U < (float)0.0 || V < (float)0.0 || W < (float)0.0) &&
-        (U > (float)0.0 || V > (float)0.0 || W > (float)0.0)){
+    det = dot4 (e_1, P);
+    
+    if (det > -EPSILON && det < EPSILON) {
         return false;
     }
 
-    /* calculate determinant */
-    float det = U + V + W;
-    if (det == (float)0.0)
+    inv_det = 1 / det;
+    T = sub4(this->tail, V1);
+    u = dot4(T, P) * inv_det;
+    if (u < 0 || u > 1) {
         return false;
+    }
 
-    // printf("Det: %f\n", det);
+    Q = cross4 (T, e_1);
+    v = dot4 (this->direction, Q) * inv_det;
+    if (v < 0 || u + v > 1) {
+        return false;
+    }
 
-    /* Calculates scaled z-coordinate of vertices and uses them to calculate the hit distance. */
-    const float Az = Sz * A.z;
-    const float Bz = Sz * B.z;
-    const float Cz = Sz * C.z;
-    const float T = U * Az + V * Bz + W * Cz;
-
-    // const int det_sign_mask = (int(det) & 0x80000000);
-    // const float xort_t = xor_signmask(T, det_sign_mask);
-    // if (xort_t < 0.0f)
-    //     return false;
-
-    // normalize U, V, W, and T
-    const float rcpDet = 1.0f / det;
-    // *u = U*rcpDet;
-    // *v = V*rcpDet;
-    // *w = W*rcpDet;
-
-    t = T * rcpDet;
+    t = dot4 (e_2, Q) * inv_det;
 
     return true;
 }

@@ -2,6 +2,7 @@
 #include "RayTracer.cuh"
 #include "Ray.cuh"
 #include "tree_prokopenko.cuh"
+#include "Basis.cuh"
 
 // __device__ void findCollisions(float4 *vertices, Ray &ray, CollisionList &candidates, CollisionList &t) {
 //     for (int i = 0; i < candidates.count; i++) {
@@ -182,15 +183,14 @@
 // }
 
 extern "C" {
-#define EPSILON 0.00001
 
 
 __global__ void getRayTracerSize(unsigned int *size) {
     *size = sizeof(RayTracer);
 }
 
-__global__ void initializeRayTracer(RayTracer *rayTracer, BVHTree *tree, float4 *vertices, unsigned int nbVertices, bool parallel) {
-    *rayTracer = RayTracer(tree, vertices, nbVertices, parallel);
+__global__ void initializeRayTracer(RayTracer *rayTracer, BVHTree *tree, float4 *origin, float4 *vertices, unsigned int nbVertices, bool parallel) {
+    *rayTracer = RayTracer(tree, origin[0], vertices, nbVertices, parallel);
 
     rayTracer->printRayTracer();
 }
@@ -237,27 +237,25 @@ __global__ void testRayBoxIntersection() {
 // }
 
 __global__ void projectPlaneRays(
-        RayTracer *rayTracer, float *image, float4 *origin,
-        unsigned int Nx, unsigned int Ny,
-        float Dx, float Dy,
-        float theta, float phi, float r) {
+        RayTracer *rayTracer, float *image, uint2 *N, float2 *D, 
+        float2 *spherical, float4 *viewerOrigin) {
     // 2D grid of 1D blocks
-    int x_i = threadIdx.x + blockIdx.x * blockDim.x;
-    int y_i = threadIdx.y + blockIdx.y * blockDim.y;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int ty = threadIdx.y + blockIdx.y * blockDim.y;
 
-    int globalThreadNum = x_i + y_i * Nx;
+    int globalThreadNum = tx + ty * N->x;
 
     if (!rayTracer->hasParallelGeometry()) {
         printf ("Geometry is not parallel\n");
         return;
     }
 
-    if (Nx == 0 || Ny == 0) {
+    if (N->x == 0 || N->y == 0) {
         printf ("Nx or Ny is 0\n");
         return;
     }
 
-    if (x_i >= Nx || y_i >= Ny){
+    if (tx >= N->x || ty >= N->y){
         return;
     }
 
@@ -267,26 +265,35 @@ __global__ void projectPlaneRays(
 
     // printf ("Nx: %d Ny: %d\n", Nx, Ny);
 
-    float4 rorigin = *origin;
+    float4 rorigin = *viewerOrigin;
 
-    float delta_x = Dx / Nx;
-    float delta_y = Dy / Ny;
+    float delta_x = D->x / N->x;
+    float delta_y = D->y / N->y;
 
-    float Dx2 = Dx / 2;
-    float Dy2 = Dy / 2;
+    Basis rayBasis;
 
-    CollisionList t_values;
-    t_values.count = 0;
-    memset(t_values.collisions, 0, sizeof(float) * MAX_COLLISIONS);
+    rayBasis.translate(rorigin);
+    rayBasis.rotate(*spherical); // theta, phi
+    rayBasis.scale(delta_x , delta_y , 1);
 
-    while(x_i < Nx) {
-        while(y_i < Ny) {
+    int Nx2 = N->x / 2;
+    int Ny2 = N->y / 2;
 
-            float x = (x_i + .5) * delta_x - Dx2;
-            float y = (y_i + .5) * delta_y - Dy2;
-            float2 p = make_float2(x, y);
+    int x_i = -Nx2 + tx;
+    int y_i = -Ny2 + ty;
 
-            image[globalThreadNum] = rayTracer->traceRayParallel(p, theta, phi, r, rorigin, t_values);
+
+    while(x_i < Nx2) {
+        while(y_i < Ny2) {
+            int4 local_coords = make_int4(x_i, y_i, 0, 0);
+
+            float4 global_coords = rayBasis.getPointInBasis(local_coords);
+
+            Ray ray(global_coords, rayBasis.getVector(2)); // Ray along z-axis
+
+            // ray.print();
+
+            image[globalThreadNum] = rayTracer->traceRayParallel(ray);
 
             y_i += blockDim.y * gridDim.y;
         }
@@ -408,7 +415,6 @@ __global__ void initializeTreeProkopenko(
     tree->setLeafNodes(leaf_nodes);
     tree->setInternalNodes(internal_nodes);
     tree->setSortedIndices(sorted_indices);
-
     // tree->printTree();
 }
 

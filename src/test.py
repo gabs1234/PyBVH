@@ -30,8 +30,17 @@ keys = [0b00001,0b000010, 0b00100, 0b00101, 0b10011, 0b11000, 0b11001, 0b11110]
 
 pipeline = CudaPipeline(["/home/lt0649/Dev/PyBVH/src/"])
 
-source_files = ["tree_prokopenko.cu", "Ray.cu", "RayTracer.cu", "test.cu"]
-module_name = "testy"
+source_files = [
+    "tree_prokopenko.cu",
+    "Basis.cu",
+    "Quaternion.cu",
+    "RotationQuaternion.cu",
+    "Ray.cu",
+    "RayTracer.cu",
+    "test.cu"
+]
+
+module_name = "test"
 pipeline.readModuleFromFiles(source_files, module_name, backend="nvcc",
                              options=[],  jitify=False)
 
@@ -173,7 +182,8 @@ def run_tree(nb_keys, vertices, bbMin, bbMax, bbMinLeafs, bbMaxLeafs):
     # Initialize ray tracer
     initRayTracer = pipeline.getKernelFromModule(module_name, "initializeRayTracer")
     parallel = True
-    args = [rayTracerPtr, treeClassPtr, vertices, len(vertices), parallel]
+    meshOrigin = cp.array([0, 0, 0, 0], dtype=cp.float32)
+    args = [rayTracerPtr, treeClassPtr, meshOrigin, vertices, len(vertices), parallel]
     initRayTracer((1, ), (1, ), args)
 
     # fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
@@ -192,18 +202,22 @@ def run_tree(nb_keys, vertices, bbMin, bbMax, bbMinLeafs, bbMaxLeafs):
     # Trace rays
     print (vertices)
     rayTrace = pipeline.getKernelFromModule(module_name, "projectPlaneRays")
-    nx = 4000
-    ny = 4000
-    size_x = cp.float32(3.5)
-    size_y = cp.float32(3.5)
-    theta = cp.float32(0)
-    phi = cp.float32(0)
-    r = cp.float32(10)
-    origin = cp.array([0,0,0,0], dtype=cp.float32)
+    nx = 2000
+    ny = 2000
+    size_x = cp.float32(3)
+    size_y = cp.float32(5)
+    theta = cp.float32(cp.pi)
+    phi = cp.float32(cp.pi)
+
+    N = cp.array([nx, ny], dtype=cp.uint32)
+    D = cp.array([size_x, size_y], dtype=cp.float32)
+    spherical = cp.array([theta, phi], dtype=cp.float32)
+    viewerOrigin = cp.array([0,0,10,0], dtype=cp.float32)
+
     image = cp.zeros(nx * ny, dtype=cp.float32)
     blockSize = (16, 16, 1)
     gridSize = (int(np.ceil(nx/blockSize[0])), int(np.ceil(ny/blockSize[1])), 1)
-    args = (rayTracerPtr, image, origin, nx, ny, size_x, size_y, theta, phi, r)
+    args = (rayTracerPtr, image, N, D, spherical, viewerOrigin)
 
     timer = CudaTimer(cp.cuda.get_current_stream())
     timer.start()
@@ -230,137 +244,6 @@ def run_tree(nb_keys, vertices, bbMin, bbMax, bbMinLeafs, bbMaxLeafs):
     host_image = host_image.reshape((ny, nx))
     plt.imshow(host_image)
     plt.show()
-
-def testPerformance(nb_keys, vertices, bbMin, bbMax, bbMinLeafs, bbMaxLeafs):
-    treeSize = cp.zeros(1, dtype=cp.uint32)
-
-    getSize = pipeline.getKernelFromModule(module_name, "getTreeClassSize")
-    getSize((1, ), (1, ), [treeSize])
-
-    # Allocate tree arrays
-    treeClassPtr = cp.cuda.alloc(treeSize.get()[0])
-
-    nb_nodes = 2 * nb_keys - 1
-
-    # Initialize tree
-    mortonKeys = cp.zeros(nb_keys, dtype=cp.uint32)
-    sorted_indices = cp.arange(nb_keys, dtype=cp.uint32)
-    bbMinInternal = cp.zeros((nb_keys, 4), dtype=cp.float32)
-    bbMaxInternal = cp.zeros((nb_keys, 4), dtype=cp.float32)
-    left_range = cp.zeros(nb_keys, dtype=cp.int32)
-    right_range = cp.zeros(nb_keys, dtype=cp.int32)
-    left_child = cp.ones(nb_keys, dtype=cp.int32) * -1
-    right_child = cp.zeros(nb_keys, dtype=cp.int32)
-    entered = cp.ones(nb_keys, dtype=cp.int32) * -1
-    rope_leafs = cp.ones(nb_keys, dtype=cp.int32) * -1
-    rope_internals = cp.ones(nb_keys, dtype=cp.int32) * -1
-    
-    
-    initTree = pipeline.getKernelFromModule(module_name, "initializeTreeProkopenko")
-
-    args = [treeClassPtr, nb_keys, mortonKeys, sorted_indices,
-            bbMin, bbMax, 
-            bbMinLeafs, bbMaxLeafs,
-            bbMinInternal, bbMaxInternal,
-            left_range, right_range, left_child, right_child,
-            entered, rope_leafs, rope_internals]
-    
-    initTree((1, ), (1, ), args)
-
-    # Compute the morton codes
-    computeMortonCodes = pipeline.getKernelFromModule(module_name, "projectKeysProkopenko")
-    blockSize = (256, 1, 1)
-    gridSize = (int(np.ceil(nb_keys/blockSize[0])), 1, 1)
-    args = [treeClassPtr, nb_keys]
-    computeMortonCodes(gridSize, blockSize, args)
-
-    # Sort the morton codes
-    sorted = cp.argsort(mortonKeys)
-    sorted_indices[:] = sorted_indices[sorted]
-    mortonKeys[:] = mortonKeys[sorted]
-    bbMinLeafs[:] = bbMinLeafs[sorted]
-    bbMaxLeafs[:] = bbMaxLeafs[sorted]
-
-    # # print the tree
-    # printTree = pipeline.getKernelFromModule(module_name, "printTreeProkopenko")
-    # printTree((1, ), (1, ), [treeClassPtr])
-    
-    # Build tree
-    buildTree = pipeline.getKernelFromModule(module_name, "buildTreeProkopenko")
-    blockSize = (256, 1, 1)
-    gridSize = (int(np.ceil(nb_keys/blockSize[0])), 1, 1)
-    args = [treeClassPtr, nb_keys]
-    buildTree(gridSize, blockSize, args)
-    
-    print (len(vertices))
-
-    # # Test ray box intersection testRayBoxIntersection
-    # rayBoxIntersection = pipeline.getKernelFromModule(module_name, "testRayBoxIntersection")
-    # rayBoxIntersection((1, ), (1, ), [])
-
-    # # Test ray triangle intersection testRayTriangleItersection
-    # rayBoxIntersection = pipeline.getKernelFromModule(module_name, "testRayTriangleIntersection")
-    # rayBoxIntersection((1, ), (1, ), [])
-
-    # Count unique occurrences of numbers in the three arrays using set
-    # filtered = left_child + rope_internals + rope_leafs
-    # filtered = cp.where(0 <= filtered)[0]
-    # filtered = cp.where(filtered < nb_keys)[0].get()
-    # nb_leafs = len(set(filtered))
-    # print (nb_leafs)
-
-    # Get ray tracer size
-    tracerSize = cp.zeros(1, dtype=cp.uint32)
-    rayTracerSize = pipeline.getKernelFromModule(module_name, "getRayTracerSize")
-    rayTracerSize((1, ), (1, ), [tracerSize])
-
-    rayTracerPtr = cp.cuda.alloc(tracerSize.get()[0])
-
-    print (tracerSize.get()[0])
-
-    # Initialize ray tracer
-    initRayTracer = pipeline.getKernelFromModule(module_name, "initializeRayTracer")
-    parallel = True
-    args = [rayTracerPtr, treeClassPtr, vertices, len(vertices), parallel]
-    initRayTracer((1, ), (1, ), args)
-
-    # fig, ax = plt.subplots(subplot_kw={'projection': '3d'})
-    # cmap = plt.get_cmap("tab10")
-    # for i in range(nb_keys-1):
-    #     dim = bbMaxInternal[i].get() - bbMinInternal[i].get()
-    #     pos = bbMinInternal[i].get()[0:3]
-    #     plot_3d_bounding_box(ax, dim, pos, color=cmap(i))
-    # for i in range(nb_keys):
-    #     dim = bbMaxLeafs[i].get() - bbMinLeafs[i].get()
-    #     pos = bbMinLeafs[i].get()[0:3]
-    #     plot_3d_bounding_box(ax, dim, pos, color='red')
-    
-    # plt.show()
-
-    # Trace rays
-    print (vertices)
-    rayTrace = pipeline.getKernelFromModule(module_name, "projectPlaneRays")
-    nx = 2000
-    ny = 2000
-    size_x = cp.float32(10)
-    size_y = cp.float32(10)
-    theta = cp.float32(0)
-    phi = cp.float32(np.pi/2)
-    r = cp.float32(1)
-    origin = cp.array([0,0,0,0], dtype=cp.float32)
-    image = cp.zeros(nx * ny, dtype=cp.float32)
-    blockSize = (16, 16, 1)
-    gridSize = (int(np.ceil(nx/blockSize[0])), int(np.ceil(ny/blockSize[1])), 1)
-    args = (rayTracerPtr, image, origin, nx, ny, size_x, size_y, theta, phi, r)
-
-    timer = CudaTimer(cp.cuda.get_current_stream())
-    timer.start()
-    rayTrace(gridSize, blockSize, args)
-    timer.stop()
-
-    print (f"Time: {timer.elapsedTime()} ms")
-
-
     
 def buildFromRandom(nb_keys):
     nb_points = nb_keys * 3
@@ -427,7 +310,7 @@ if __name__ == "__main__":
     # nk_keys = 32
     # buildFromRandom(nk_keys)
 
-    buildFromStl("blender/monkey.stl")
+    buildFromStl("blender/torus.stl")
 
     # nb_triangles = 8
     # bbMin = cp.array([0, 0, 0, 0], dtype=cp.float32)
