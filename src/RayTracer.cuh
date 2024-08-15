@@ -11,6 +11,7 @@ public:
 
     __device__ float4 sphericalToCartesian(float theta, float phi, float r);
     __device__ void rotateBasis (float4 &u1, float4 &u2, float4 &u3, float theta, float phi);
+    __device__ Basis makeProjectionBasis (Basis &MeshBasis, float4 &spherical, float4 &euler);
     __device__ bool computeRayAABB(float4 &O, float4 &min, float4 &max);
     __device__ float4 computeRayParametric(float t);
     __device__ bool hasParallelGeometry() { return this->parallelGeometry; };

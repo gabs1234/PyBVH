@@ -208,7 +208,7 @@ __device__ void BVHTree::updateParents(int index) {
         if (delta_right < delta_left) {
             const int apetrei_parent = range_right;
 
-            range_right = atomicCAS(&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_left);
+            range_right = atomicCAS_system(&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_left);
             // printf ("Apetrei parent: %d\n", apetrei_parent);
             if (range_right == INVALID) {
                 return;
@@ -221,7 +221,7 @@ __device__ void BVHTree::updateParents(int index) {
             bool const right_is_leaf = (right_child == range_right);
 
             // Memory sync
-            __threadfence();
+            __threadfence_system();
 
             if (right_is_leaf) {
                 float4 bbMinRight = lnodes->bbMin[right_child];
@@ -237,7 +237,7 @@ __device__ void BVHTree::updateParents(int index) {
         }
         else {
             int const apetrei_parent = range_left - 1;
-            range_left = atomicCAS(&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_right);
+            range_left = atomicCAS_system(&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_right);
             // printf ("Apetrei parent: %d\n", apetrei_parent);
 
             if (range_left == INVALID){
@@ -250,7 +250,7 @@ __device__ void BVHTree::updateParents(int index) {
             bool const left_is_leaf = (left_child == range_left);
 
             // Memory sync
-            __threadfence();
+            __threadfence_system();
             
             if (left_is_leaf) {
                 float4 bbMinLeft = lnodes->bbMin[left_child];
@@ -440,4 +440,22 @@ __device__ void BVHTree::query (float4 &bbMinQuery, float4 &bbMaxQuery, Collisio
     }
     while (current_node != SENTINEL);
 
+}
+
+__global__ void growTree (BVHTree *deviceTree) {
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+
+    while (index < deviceTree->nb_keys) {
+        deviceTree->projectKeys(index);
+        index += blockDim.x * gridDim.x;
+    }
+
+    __syncthreads();
+
+    index = threadIdx.x + blockIdx.x * blockDim.x;
+
+    while (index < deviceTree->nb_keys) {
+        deviceTree->updateParents(index);
+        index += blockDim.x * gridDim.x;
+    }
 }

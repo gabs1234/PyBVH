@@ -55,6 +55,47 @@ __device__ void RayTracer::rotateBasis (float4 &u1, float4 &u2, float4 &u3, floa
     u3 = u3p;
 }
 
+__device__ Basis RayTracer::makeProjectionBasis (Basis &MeshBasis, float4 &spherical, float4 &euler) {
+    // Precompute cos and sin values
+    float cos_theta = cos(spherical.x);
+    float cos_phi = cos(spherical.y);
+    float sin_theta = sin(spherical.x);
+    float sin_phi = sin(spherical.y);
+
+    // Compute the basis vectors
+    float4 w = make_float4(cos_phi * sin_theta, sin_phi * sin_theta, cos_theta, 0.0);
+    float4 u = make_float4(cos_phi * cos_theta, sin_phi * cos_theta, -sin_theta, 0.0);
+    float4 v = make_float4(-sin_phi, cos_phi, 0.0, 0.0);
+
+    // Get origin of the basis
+    float4 meshOrigin = MeshBasis.getOrigin();
+    float4 new_origin;
+
+    new_origin.x = meshOrigin.x + spherical.z * w.x;
+    new_origin.y = meshOrigin.y + spherical.z * w.y;
+    new_origin.z = meshOrigin.z + spherical.z * w.z;
+    new_origin.w = 0;
+
+    // w = -w
+    w.x = -w.x;
+    w.y = -w.y;
+    w.z = -w.z;
+    u.x = -u.x;
+    u.y = -u.y;
+    u.z = -u.z;
+    v.x = -v.x;
+    v.y = -v.y;
+    v.z = -v.z;
+
+    // Create the new basis
+    Basis new_basis = Basis(new_origin, u, v, w);
+
+    // Rotate the basis
+    new_basis.rotate(euler);
+
+    return new_basis;
+}
+
 __device__ float computeThickness(CollisionList &tvalues) {
     
 
@@ -64,7 +105,7 @@ __device__ float computeThickness(CollisionList &tvalues) {
     i = 0;
     while (i < tvalues.count) {
         j = i + 1;
-        while (j < tvalues.count && fabsf (tvalues.collisions[j] - tvalues.collisions[i]) < 0.00001) {
+        while (j < tvalues.count && fabsf (tvalues.collisions[j] - tvalues.collisions[i]) < 0.0000001) {
             j++;
         }
         if (i < tvalues.count && j < tvalues.count) {
@@ -91,19 +132,26 @@ __device__ float RayTracer::traceRayParallel(Ray &ray) {
     candidates.count = 0;
     memset(candidates.collisions, 0, MAX_COLLISIONS * sizeof(float));
 
+    CollisionList tvalues;
+    tvalues.count = 0;
+    memset(tvalues.collisions, 0, MAX_COLLISIONS * sizeof(float));
+
     // This is where the acceleration structure (BVH) is actually usefull
     this->tree->query(ray, candidates);
 
-    // for (int i = 0; i < candidates.count; i++) {
-    //     candidates.collisions[i] += 1;
-    // }
+    if (candidates.count == 0) {
+        return 0.0;
+    }
+    else {
+        printf ("candidates count = %d\n", candidates.count);
+    }
 
     // Test the candidates for actual intersections
     for (int i = 0; i < candidates.count; i++) {
         int primIndex = candidates.collisions[i]*3;
 
         if (primIndex + 2>= this->nbVertices || primIndex < 0) {
-            printf ("Invalid index %d\n", primIndex);
+            continue;
         }
         
         // printf("Collision at %d\n", primIndex);
@@ -114,14 +162,14 @@ __device__ float RayTracer::traceRayParallel(Ray &ray) {
         float t;
         if (ray.intersects(V1, V2, V3, t)) {
             // printf("real Collision at %d, %f\n", primIndex, t);
-            candidates.collisions[i] = t;
+            tvalues.collisions[tvalues.count++] = t;
         }
     }
 
     // Print the t_values
 
 
-    // // Sort the t_values
+    // Sort the t_values
     // thrust::sort(thrust::device, candidates.collisions, candidates.collisions + candidates.count);
 
     // printf ("t_values count = %d\n", t_values.count);
@@ -130,5 +178,5 @@ __device__ float RayTracer::traceRayParallel(Ray &ray) {
     // }
 
     // compute the thickness
-    return candidates.count;
+    return sumTvalues(candidates);
 }

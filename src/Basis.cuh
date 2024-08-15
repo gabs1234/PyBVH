@@ -22,6 +22,7 @@ public:
     __device__ void translate(float x, float y, float z);
     __device__ void rotate(float theta, float phi);
     __device__ void rotate(float2 spherical);
+    __device__ void rotate (float4 euler);
     __device__ void scale(float s1, float s2, float s3);
     __device__ void scale(float4 scale);
 
@@ -29,6 +30,18 @@ public:
     __device__ float4 getPointInBasis(float4 c) const;
 
     __device__ float4 getVector(int i) const;
+
+    __device__ float4 getOrigin() const { return this->origin; };
+    __device__ float4 getU1() const { return this->u1; };
+    __device__ float4 getU2() const { return this->u2; };
+    __device__ float4 getU3() const { return this->u3; };
+
+    __device__ void print () const {
+        printf("origin: %f %f %f\n", this->origin.x, this->origin.y, this->origin.z);
+        printf("u1: %f %f %f\n", this->u1.x, this->u1.y, this->u1.z);
+        printf("u2: %f %f %f\n", this->u2.x, this->u2.y, this->u2.z);
+        printf("u3: %f %f %f\n", this->u3.x, this->u3.y, this->u3.z);
+    }
 
 private:
     float4 origin;

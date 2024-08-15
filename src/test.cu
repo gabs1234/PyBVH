@@ -238,12 +238,9 @@ __global__ void testRayBoxIntersection() {
 
 __global__ void projectPlaneRays(
         RayTracer *rayTracer, float *image, uint2 *N, float2 *D, 
-        float2 *spherical, float4 *viewerOrigin) {
+        float4 *spherical, float4 *euler, float4 *meshOrigin) {
     // 2D grid of 1D blocks
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    int ty = threadIdx.y + blockIdx.y * blockDim.y;
-
-    int globalThreadNum = tx + ty * N->x;
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
 
     if (!rayTracer->hasParallelGeometry()) {
         printf ("Geometry is not parallel\n");
@@ -255,49 +252,50 @@ __global__ void projectPlaneRays(
         return;
     }
 
-    if (tx >= N->x || ty >= N->y){
-        return;
-    }
+    // if (tx >= N->x || ty >= N->y){
+    //     // printf ("tx: %d ty: %d Nx: %d Ny: %d\n", tx, ty, N->x, N->y);
+    //     return;
+    // }
 
     // if (globalThreadNum > 0){
     //     return;
     // }
 
     // printf ("Nx: %d Ny: %d\n", Nx, Ny);
+    Basis meshBasis = Basis(
+        *meshOrigin,
+        make_float4(1, 0, 0, 0),
+        make_float4(0, 1, 0, 0),
+        make_float4(0, 0, 1, 0));
 
-    float4 rorigin = *viewerOrigin;
+    Basis projectionPlaneBasis = rayTracer->makeProjectionBasis(
+        meshBasis, *spherical, *euler);
 
+    
+        
     float delta_x = D->x / N->x;
     float delta_y = D->y / N->y;
+    projectionPlaneBasis.scale(delta_x , delta_y , 1);
 
-    Basis rayBasis;
+    if (tid == 0) {
+        meshBasis.print();
+        projectionPlaneBasis.print();
+    }
 
-    rayBasis.translate(rorigin);
-    rayBasis.rotate(*spherical); // theta, phi
-    rayBasis.scale(delta_x , delta_y , 1);
+    int Nx2 = -(N->x / 2);
+    int Ny2 = -(N->y / 2);
 
-    int Nx2 = N->x / 2;
-    int Ny2 = N->y / 2;
+    for (size_t gid = tid; gid < N->x * N->y; gid += blockDim.x * gridDim.x) {
+        int i = gid % N->x + Nx2;
+        int j = gid / N->x + Ny2;
+        float4 ray_origin = projectionPlaneBasis.getPointInBasis(make_float4(i, j, 0, 0));
+        
+        Ray ray = Ray(ray_origin, projectionPlaneBasis.getVector(2)); // ray along z axis
 
-    int x_i = -Nx2 + tx;
-    int y_i = -Ny2 + ty;
+        // ray.print();
 
-
-    while(x_i < Nx2) {
-        while(y_i < Ny2) {
-            int4 local_coords = make_int4(x_i, y_i, 0, 0);
-
-            float4 global_coords = rayBasis.getPointInBasis(local_coords);
-
-            Ray ray(global_coords, rayBasis.getVector(2)); // Ray along z-axis
-
-            // ray.print();
-
-            image[globalThreadNum] = rayTracer->traceRayParallel(ray);
-
-            y_i += blockDim.y * gridDim.y;
-        }
-        x_i += blockDim.x * gridDim.x;
+        image[gid] = rayTracer->traceRayParallel(ray);
+    
     }
 }
 

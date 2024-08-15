@@ -55,12 +55,12 @@ do { \
     (destination).z = __shfl((source)[2], (index)); \
 } while (0);
 
-__device__ inline float xor_signmask(float x, int y)
+__host__ __device__ inline float xor_signmask(float x, int y)
 {
     return (float)(int(x) ^ y);
 }
 
-__device__ inline float4 sub4(float4 a, float4 b)
+__host__ __device__ inline float4 sub4(float4 a, float4 b)
 {
     float4 c;
     c.x = a.x - b.x;
@@ -70,7 +70,7 @@ __device__ inline float4 sub4(float4 a, float4 b)
     return c;
 }
 
-__device__ inline float4 abs4(float4 a)
+__host__ __device__ inline float4 abs4(float4 a)
 {
     float4 c;
     c.x = fabs(a.x);
@@ -80,7 +80,7 @@ __device__ inline float4 abs4(float4 a)
     return c;
 }
 
-__device__ inline float4 min4(float4 a, float4 b)
+__host__ __device__ inline float4 min4(float4 a, float4 b)
 {
     float4 c;
     c.x = fminf(a.x, b.x);
@@ -90,7 +90,7 @@ __device__ inline float4 min4(float4 a, float4 b)
     return c;
 }
 
-__device__ inline float4 max4(float4 a, float4 b)
+__host__ __device__ inline float4 max4(float4 a, float4 b)
 {
     float4 c;
     c.x = fmaxf(a.x, b.x);
@@ -100,7 +100,7 @@ __device__ inline float4 max4(float4 a, float4 b)
     return c;
 }
 
-__device__ inline float4 cross4 (float4 a, float4 b) // cross product between two 3D vectors
+__host__ __device__ inline float4 cross4 (float4 a, float4 b) // cross product between two 3D vectors
 { 
     float4 c;
     c.x = a.y * b.z - a.z * b.y;
@@ -111,12 +111,12 @@ __device__ inline float4 cross4 (float4 a, float4 b) // cross product between tw
     return c;
 }
 
-__device__ inline float dot4(float4 a, float4 b)
+__host__ __device__ inline float dot4(float4 a, float4 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-__device__ inline float4 normalize4(float4 a)
+__host__ __device__ inline float4 normalize4(float4 a)
 {
     float invLen = rsqrtf(dot4(a, a));
     float norm = 1.0f / invLen;
@@ -124,7 +124,7 @@ __device__ inline float4 normalize4(float4 a)
 }
 
 
-__device__ int maxDimIndex(const float4 &D)
+__host__ __device__ inline int maxDimIndex(const float4 &D)
 {
     if (D.x > D.y)
     {
@@ -149,7 +149,8 @@ __device__ int maxDimIndex(const float4 &D)
         }
     }
 }
-__device__ float4 permuteVectorAlongMaxDim(float4 v, unsigned int shift)
+
+__host__ __device__ inline float4 permuteVectorAlongMaxDim(float4 v, unsigned int shift)
 {
     float4 c = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -314,7 +315,7 @@ __forceinline__ __host__ __device__ void calculateTriangleBoundingBox(float4 ver
 }
 
 
-__device__ float4 getBoundingBoxCentroid(float4 bboxMin, float4 bboxMax)
+__host__ __device__ inline float4 getBoundingBoxCentroid(float4 bboxMin, float4 bboxMax)
 {
     float4 centroid;
 
@@ -745,3 +746,83 @@ __forceinline__ __host__ __device__ int sumArithmeticSequence(int numberOfElemen
 }
 
 // }
+
+
+// Device implementations
+__device__ inline float device_int_as_float(int i)
+{
+    return __int_as_float(i);
+}
+
+__device__ inline int device_float_as_int(float f)
+{
+    return __float_as_int(f);
+}
+
+__device__ inline float device_xorf(float x, int y)
+{
+    return __int_as_float(__float_as_int(x) ^ y);
+}
+
+__device__ inline int device_sign_mask(float x)
+{
+    return __float_as_int(x) & 0x80000000;
+}
+
+// Host implementations
+__host__ inline float host_int_as_float(int i)
+{
+    return *(float*)(&i);
+}
+
+__host__ inline int host_float_as_int(float f)
+{
+    return *(int*)(&f);
+}
+
+__host__ inline float host_xorf(float x, int y)
+{
+    return host_int_as_float(host_float_as_int(x) ^ y);
+}
+
+__host__ inline int host_sign_mask(float x)
+{
+    return host_float_as_int(x) & 0x80000000;
+}
+
+// Unified interface for both host and device
+__host__ __device__ inline float __iaf(int i)
+{
+#ifdef __CUDA_ARCH__
+    return device_int_as_float(i);
+#else
+    return host_int_as_float(i);
+#endif
+}
+
+__host__ __device__ inline int __fai(float f)
+{
+#ifdef __CUDA_ARCH__
+    return device_float_as_int(f);
+#else
+    return host_float_as_int(f);
+#endif
+}
+
+__host__ __device__ inline float xorf(float x, int y)
+{
+#ifdef __CUDA_ARCH__
+    return device_xorf(x, y);
+#else
+    return host_xorf(x, y);
+#endif
+}
+
+__host__ __device__ inline int sign_mask(float x)
+{
+#ifdef __CUDA_ARCH__
+    return device_sign_mask(x);
+#else
+    return host_sign_mask(x);
+#endif
+}

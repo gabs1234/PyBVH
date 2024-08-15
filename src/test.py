@@ -78,6 +78,11 @@ def count_unique(arr, nb_keys):
     unique = cp.unique(cleaned)
     return len(unique)
 
+def SphericalToCartesian(theta, phi, r):
+    x = r * np.sin(theta) * np.cos(phi)
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
+    return np.array([x, y, z, 0 ])
         
 
 def run_tree(nb_keys, vertices, bbMin, bbMax, bbMinLeafs, bbMaxLeafs):
@@ -200,24 +205,24 @@ def run_tree(nb_keys, vertices, bbMin, bbMax, bbMinLeafs, bbMaxLeafs):
     # plt.show()
 
     # Trace rays
-    print (vertices)
     rayTrace = pipeline.getKernelFromModule(module_name, "projectPlaneRays")
-    nx = 2000
-    ny = 2000
-    size_x = cp.float32(3)
-    size_y = cp.float32(5)
-    theta = cp.float32(cp.pi)
-    phi = cp.float32(cp.pi)
+    ox, oy, oz = cp.float32(0), cp.float32(0), cp.float32(0)
+    nx, ny = cp.uint32(100), cp.uint32(100)
+    size_x, size_y = cp.float32(5), cp.float32(5)
+    r, theta, phi= cp.float32(5), cp.float32(0), cp.pi
+    yaw, pitch, roll = 0, 0, cp.float32(0)
 
+    meshOrigin = cp.array([ox, oy, oz, 0], dtype=cp.float32)
     N = cp.array([nx, ny], dtype=cp.uint32)
     D = cp.array([size_x, size_y], dtype=cp.float32)
-    spherical = cp.array([theta, phi], dtype=cp.float32)
-    viewerOrigin = cp.array([0,0,10,0], dtype=cp.float32)
+    sphericalDirection = cp.array([theta, phi, r, 0], dtype=cp.float32)
+    eulerDirection = cp.array([yaw, pitch, roll, 0], dtype=cp.float32)
 
     image = cp.zeros(nx * ny, dtype=cp.float32)
-    blockSize = (16, 16, 1)
-    gridSize = (int(np.ceil(nx/blockSize[0])), int(np.ceil(ny/blockSize[1])), 1)
-    args = (rayTracerPtr, image, N, D, spherical, viewerOrigin)
+    blockSize = (64, 1, 1)
+    gridSize = (nx*ny//blockSize[0], 1, 1)
+    print (gridSize)
+    args = (rayTracerPtr, image, N, D, sphericalDirection, eulerDirection, meshOrigin)
 
     timer = CudaTimer(cp.cuda.get_current_stream())
     timer.start()
@@ -310,7 +315,7 @@ if __name__ == "__main__":
     # nk_keys = 32
     # buildFromRandom(nk_keys)
 
-    buildFromStl("blender/torus.stl")
+    buildFromStl("blender/monkey.stl")
 
     # nb_triangles = 8
     # bbMin = cp.array([0, 0, 0, 0], dtype=cp.float32)
