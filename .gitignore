@@ -3,5 +3,7 @@
 src/blender/*
 src/.vscode/*
 src/__pycache__/
-src/build
-src/cccl
+src/build/*
+src/cccl/*
+src/graphviz/*
+src/test/vgcore.43557
