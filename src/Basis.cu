@@ -1,11 +1,13 @@
 #include "Basis.cuh"
 
-__device__ void Basis::translate(float4 translation) {
+using namespace BasisNamespace;
+
+__host__ __device__ void Basis::translate(float4 translation) {
     this->origin.x += translation.x;
     this->origin.y += translation.y;
     this->origin.z += translation.z;
 }
-__device__ void Basis::translate(float x, float y, float z) {
+__host__ __device__ void Basis::translate(float x, float y, float z) {
     this->origin.x += x;
     this->origin.y += y;
     this->origin.z += z;
@@ -14,7 +16,7 @@ __device__ void Basis::translate(float x, float y, float z) {
 /**
  * Use spherical coordinates as standard to transform the basis
 */
-__device__ void Basis::rotate (float theta, float phi) {
+__host__ __device__ void Basis::rotate (float theta, float phi) {
     RotationQuaternion rot1(-theta, this->u1);
     RotationQuaternion rot2(phi, this->u3);
 
@@ -27,7 +29,7 @@ __device__ void Basis::rotate (float theta, float phi) {
     this->u3 = rot2.rotate(this->u3);
 }
 
-__device__ void Basis::rotate (float2 spherical) {
+__host__ __device__ void Basis::rotate (float2 &spherical) {
     RotationQuaternion rot1(-spherical.x, this->u1);
     RotationQuaternion rot2(spherical.y, this->u3);
 
@@ -40,7 +42,7 @@ __device__ void Basis::rotate (float2 spherical) {
     this->u3 = rot2.rotate(this->u3);
 }
 
-__device__ void Basis::rotate (float4 euler) {
+__host__ __device__ void Basis::rotate (float4 &euler) {
     // yaw
     RotationQuaternion rot_yaw(euler.x, this->u2);
     this->u1 = rot_yaw.rotate(this->u1);
@@ -57,7 +59,7 @@ __device__ void Basis::rotate (float4 euler) {
     this->u2 = rot_roll.rotate(this->u2);
 }
 
-__device__ void Basis::scale (float s1, float s2, float s3) {
+__host__ __device__ void Basis::scale (float s1, float s2, float s3) {
     this->u1.x = this->u1.x * s1;
     this->u1.y = this->u1.y * s1;
     this->u1.z = this->u1.z * s1;
@@ -71,7 +73,7 @@ __device__ void Basis::scale (float s1, float s2, float s3) {
     this->u3.z = this->u3.z * s3;
 }
 
-__device__ void Basis::scale (float4 scale) {
+__host__ __device__ void Basis::scale (float4 scale) {
     this->u1.x = this->u1.x * scale.x;
     this->u1.y = this->u1.y * scale.x;
     this->u1.z = this->u1.z * scale.x;
@@ -85,7 +87,7 @@ __device__ void Basis::scale (float4 scale) {
     this->u3.z = this->u3.z * scale.z;
 }
 
-__device__ float4 Basis::getPointInBasis(int4 c) const {
+__host__ __device__ float4 Basis::getPointInBasis(int4 c) const {
     float4 result;
     result.x = c.x * this->u1.x + c.y * this->u2.x + c.z * this->u3.x + this->origin.x;
     result.y = c.x * this->u1.y + c.y * this->u2.y + c.z * this->u3.y + this->origin.y;
@@ -94,7 +96,7 @@ __device__ float4 Basis::getPointInBasis(int4 c) const {
     return result;
 }
 
-__device__ float4 Basis::getPointInBasis(float4 c) const {
+__host__ __device__ float4 Basis::getPointInBasis(float4 c) const {
     float4 result;
     result.x = c.x * this->u1.x + c.y * this->u2.x + c.z * this->u3.x + this->origin.x;
     result.y = c.x * this->u1.y + c.y * this->u2.y + c.z * this->u3.y + this->origin.y;
@@ -103,7 +105,7 @@ __device__ float4 Basis::getPointInBasis(float4 c) const {
     return result;
 }
 
-__device__ float4 Basis::getVector(int i) const {
+__host__ __device__ float4 Basis::getVector(int i) const {
     switch (i) {
         case 0:
             return this->u1;

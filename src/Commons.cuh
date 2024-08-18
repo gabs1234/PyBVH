@@ -1,4 +1,8 @@
 #pragma once
+#include <cstdio>
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <iostream>
 
 #define MAX_COLLISIONS 128
 #define EPSILON 0.00001
@@ -54,6 +58,16 @@ do { \
     (destination).y = __shfl((source)[1], (index)); \
     (destination).z = __shfl((source)[2], (index)); \
 } while (0);
+
+#define cudaCheckError(ans) { cudaAssert((ans), __FILE__, __LINE__); }
+inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort = true)
+{
+    if (code != cudaSuccess) 
+    {
+        std::cerr << "CUDA Error: " << cudaGetErrorString(code) << " in " << file << " at line " << line << std::endl;
+        if (abort) exit(code);
+    }
+}
 
 __host__ __device__ inline float xor_signmask(float x, int y)
 {

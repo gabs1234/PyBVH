@@ -19,9 +19,9 @@ __host__ __device__ Ray::Ray(float4 tail, float4 direction){
 };
 
 __host__ __device__ void Ray::print() {
-    // printf ("Ray: %f %f %f -> %f %f %f\n", this->tail.x, this->tail.y, this->tail.z, this->direction.x, this->direction.y, this->direction.z);
-    // printf ("InvDirection: %f %f %f\n", this->invDirection.x, this->invDirection.y, this->invDirection.z);
-    // printf ("Signs: %d, %d, %d\n", this->sign[0], this->sign[1], this->sign[2]);
+    printf ("Ray: %f %f %f -> %f %f %f\n", this->tail.x, this->tail.y, this->tail.z, this->direction.x, this->direction.y, this->direction.z);
+    printf ("InvDirection: %f %f %f\n", this->invDirection.x, this->invDirection.y, this->invDirection.z);
+    printf ("Signs: %d, %d, %d\n", this->sign[0], this->sign[1], this->sign[2]);
 }
 
 __host__ __device__ float Ray::normalize(float4 &v) {

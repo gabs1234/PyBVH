@@ -1,20 +1,24 @@
 #include "RayTracer.cuh"
-#include "Ray.cuh"
-#include "tree_prokopenko.cuh"
-#include "Commons.cuh"
 
-#include <thrust/sort.h>
+// #include <thrust/sort.h>
 
-__device__ RayTracer::RayTracer(BVHTree *tree, float4 origin, float4 *vertices, unsigned int nbVertices, bool parallel) {
+__host__ __device__ RayTracer::RayTracer(BVHTree *tree, float4 *vertices, unsigned int nb_vertices) {
+    this->tree = tree;
+    this->vertices = vertices;
+    this->nbVertices = nb_vertices;
+    this->raySet = 0;
+}
+
+__host__ __device__ RayTracer::RayTracer(BVHTree *tree, float4 origin, float4 *vertices, unsigned int nb_vertices, bool parallel) {
     this->tree = tree;
     this->origin = origin;
     this->vertices = vertices;
-    this->nbVertices = nbVertices;
+    this->nbVertices = nb_vertices;
     this->raySet = 0;
     this->parallelGeometry = parallel;
 }
 
-__device__ float4 RayTracer::sphericalToCartesian(float theta, float phi, float r) {
+__host__ __device__ float4 RayTracer::sphericalToCartesian(float theta, float phi, float r) {
     float const x = r * sin(theta) * cos(phi);
     float const y = r * sin(theta) * sin(phi);
     float const z = r * cos(theta);
@@ -24,7 +28,7 @@ __device__ float4 RayTracer::sphericalToCartesian(float theta, float phi, float 
 
 
 
-__device__ bool RayTracer::computeRayAABB(float4 &O, float4 &min, float4 &max) {
+__host__ __device__ bool RayTracer::computeRayAABB(float4 &O, float4 &min, float4 &max) {
     float4 sceneBBMin = this->tree->getSceneBBMin();
     float4 sceneBBMax = this->tree->getSceneBBMax();
     float4 rayBBmin, rayBBmax;
@@ -38,36 +42,19 @@ __device__ bool RayTracer::computeRayAABB(float4 &O, float4 &min, float4 &max) {
     return false;
 }
 
-__device__ void RayTracer::rotateBasis (float4 &u1, float4 &u2, float4 &u3, float theta, float phi) {
-    RotationQuaternion rot1(-theta, u1);
-    RotationQuaternion rot2(phi, u3);
-
-    float4 u1p = rot1.rotate(u1);
-    float4 u2p = rot1.rotate(u2);
-    float4 u3p = rot1.rotate(u3);
-
-    u1p = rot2.rotate(u1p);
-    u2p = rot2.rotate(u2p);
-    u3p = rot2.rotate(u3p);
-
-    u1 = u1p;
-    u2 = u2p;
-    u3 = u3p;
-}
-
-__device__ Basis RayTracer::makeProjectionBasis (Basis &MeshBasis, float4 &spherical, float4 &euler) {
+__host__ __device__ BasisNamespace::Basis RayTracer::makeProjectionBasis (BasisNamespace::Basis &MeshBasis, float4 &spherical, float4 &euler) {
     // Precompute cos and sin values
     float cos_theta = cos(spherical.x);
     float cos_phi = cos(spherical.y);
     float sin_theta = sin(spherical.x);
     float sin_phi = sin(spherical.y);
 
-    // Compute the basis vectors
+    // Compute the BasisNamespace::Basisbasis vectors
     float4 w = make_float4(cos_phi * sin_theta, sin_phi * sin_theta, cos_theta, 0.0);
     float4 u = make_float4(cos_phi * cos_theta, sin_phi * cos_theta, -sin_theta, 0.0);
     float4 v = make_float4(-sin_phi, cos_phi, 0.0, 0.0);
 
-    // Get origin of the basis
+    // Get origin of the BasisNamespace::Basisbasis
     float4 meshOrigin = MeshBasis.getOrigin();
     float4 new_origin;
 
@@ -87,16 +74,16 @@ __device__ Basis RayTracer::makeProjectionBasis (Basis &MeshBasis, float4 &spher
     v.y = -v.y;
     v.z = -v.z;
 
-    // Create the new basis
-    Basis new_basis = Basis(new_origin, u, v, w);
+    // Create the new BasisNamespace::Basisbasis
+    BasisNamespace::Basis new_basis = BasisNamespace::Basis(new_origin, u, v, w);
 
-    // Rotate the basis
+    // Rotate the BasisNamespace::Basisbasis
     new_basis.rotate(euler);
 
     return new_basis;
 }
 
-__device__ float computeThickness(CollisionList &tvalues) {
+__host__ __device__ float computeThickness(CollisionList &tvalues) {
     
 
     int i, j;
@@ -117,7 +104,7 @@ __device__ float computeThickness(CollisionList &tvalues) {
     return result;
 }
 
-__device__ float sumTvalues (CollisionList &t_values) {
+__host__ __device__ float sumTvalues (CollisionList &t_values) {
     float thickness = 0;
     for (int i = 0; i < t_values.count; i++) {
         thickness += t_values.collisions[i];
@@ -125,7 +112,7 @@ __device__ float sumTvalues (CollisionList &t_values) {
     return thickness;
 }
 
-__device__ float RayTracer::traceRayParallel(Ray &ray) {
+__host__ __device__ float RayTracer::traceRayParallel(Ray &ray) {
     
 
     CollisionList candidates;
@@ -143,7 +130,7 @@ __device__ float RayTracer::traceRayParallel(Ray &ray) {
         return 0.0;
     }
     else {
-        printf ("candidates count = %d\n", candidates.count);
+        // printf ("candidates count = %d\n", candidates.count);
     }
 
     // Test the candidates for actual intersections
@@ -178,5 +165,57 @@ __device__ float RayTracer::traceRayParallel(Ray &ray) {
     // }
 
     // compute the thickness
-    return sumTvalues(candidates);
+    return sumTvalues(tvalues);
+}
+
+__host__ __device__ void RayTracer::testSingleRay(Ray ray, CollisionList *collisions) {
+    this->tree->query(ray, *collisions);
+}
+
+__global__ void projectPlaneRaysKernel (
+    RayTracer *tracer, float *image, 
+    uint2 N, float2 D,
+    float4 spherical, float4 euler, float4 meshOrigin) {
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (N.x == 0 || N.y == 0) {
+        return;
+    }
+
+    if (N.x * N.y <= tid) {
+        return;
+    }
+
+    BasisNamespace::Basis meshBasis = BasisNamespace::Basis(
+        meshOrigin,
+        make_float4(1, 0, 0, 0),
+        make_float4(0, 1, 0, 0),
+        make_float4(0, 0, 1, 0));
+
+    BasisNamespace::Basis projectionPlaneBasis = tracer->makeProjectionBasis(
+        meshBasis, spherical, euler);
+        
+    float delta_x = D.x / (N.x-1);
+    float delta_y = D.y / (N.y-1);
+    projectionPlaneBasis.scale(delta_x , delta_y , 1);
+
+    if (tid == 0) {
+        meshBasis.print();
+        projectionPlaneBasis.print();
+    }
+
+    for (size_t gid = tid; gid < N.x * N.y; gid += blockDim.x * gridDim.x) {
+        int i = gid % N.x;
+        int j = gid / N.x;
+        // printf ("i = %d, j = %d\n", i, j);
+        float4 ray_origin = projectionPlaneBasis.getPointInBasis(make_float4(i, j, 0, 0));
+        
+        Ray ray = Ray(ray_origin, projectionPlaneBasis.getVector(2)); // ray along z axis
+
+        // ray.print();
+
+        // printf ("ray origin = (%f, %f, %f)\n", ray_origin.x, ray_origin.y, ray_origin.z);
+
+        image[gid] = tracer->traceRayParallel(ray);
+    }
 }

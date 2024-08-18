@@ -1,12 +1,12 @@
 #include "tree_prokopenko.cuh"
 #include "Commons.cuh"
 
-__device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys) {
+__host__ __device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys) {
     this->nb_keys = nb_keys;
     this->keys = keys;
 }
 
-__device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys, float4 *bbMinScene, float4 *bbMaxScene) {
+__host__ __device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys, float4 *bbMinScene, float4 *bbMaxScene) {
     this->nb_keys = nb_keys;
     this->keys = keys;
 
@@ -14,7 +14,7 @@ __device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys, float4 *bbMinS
     this->bbMax = bbMaxScene[0];
 }
 
-__device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys, float4 *bbMinScene, float4 *bbMaxScene,
+__host__ __device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys, float4 *bbMinScene, float4 *bbMaxScene,
     float4 *bbMinLeafs, float4 *bbMaxLeafs) {
     this->nb_keys = nb_keys;
     this->keys = keys;
@@ -26,7 +26,7 @@ __device__ BVHTree::BVHTree(unsigned int nb_keys, morton_t *keys, float4 *bbMinS
     this->leaf_nodes.bbMax = bbMaxLeafs;
 }
 
-__device__ void BVHTree::printTree () {
+__host__ __device__ void BVHTree::printTree () {
     printf ("BVHTree: %d\n", this->nb_keys);
     printf ("bbMin: %f %f %f\n", this->bbMin.x, this->bbMin.y, this->bbMin.z);
     printf ("bbMax: %f %f %f\n", this->bbMax.x, this->bbMax.y, this->bbMax.z);
@@ -34,34 +34,33 @@ __device__ void BVHTree::printTree () {
     printf ("Internal Nodes: %d\n", this->internal_nodes.nb_nodes);
 
     for (int i = 0; i < this->nb_keys; i++) {
-        printf ("Entered: %d, %d |\n", i, this->internal_nodes.entered[i]);
-    }
-    printf ("\n");
-
-    for (int i = 0; i < this->nb_keys; i++) {
         printf ("Rope: %d, %d |\n", i, this->leaf_nodes.rope[i]);
     }
-    printf ("\n");
-
     for (int i = 0; i < this->nb_keys; i++) {
         printf ("Morton keys: %d, %d |\n", i, this->keys[i]);
     }
-
     for (int i = 0; i < this->nb_keys; i++) {
         printf ("Sorted indices: %d, %d |\n", i, this->sorted_indices[i]);
     }
+    for (int i = 0; i < this->nb_keys; i++) {
+        printf ("Leaf bbmin: %d, %f, %f, %f |\n", i, this->leaf_nodes.bbMin[i].x, this->leaf_nodes.bbMin[i].y, this->leaf_nodes.bbMin[i].z);
+    }
+    for (int i = 0; i < this->nb_keys; i++) {
+        printf ("Leaf bbmax: %d, %f, %f, %f |\n", i, this->leaf_nodes.bbMax[i].x, this->leaf_nodes.bbMax[i].y, this->leaf_nodes.bbMax[i].z);
+    }
+
     printf ("\n");
 }
 
-__device__ int BVHTree::internal_index(int index) {
+__host__ __device__ int BVHTree::internal_index(int index) {
     return index + this->nb_keys;    
 }
 
-__device__ bool BVHTree::isLeaf(int index) {
+__host__ __device__ bool BVHTree::isLeaf(int index) {
     // printf ("Index: %d\n", index);
     return index < this->nb_keys;
 }
-__device__ void BVHTree::projectKeys(int index) {
+__host__ __device__ void BVHTree::projectKeys(int index) {
     // Calculate the centroid of the AABB
     float4 centroid = getBoundingBoxCentroid(this->leaf_nodes.bbMin[index], this->leaf_nodes.bbMax[index]);
     
@@ -70,11 +69,13 @@ __device__ void BVHTree::projectKeys(int index) {
     // Calculate the morton code of the triangle
     morton_t mortonCode = calculateMortonCode(normalizedCentroid);
 
+    this->sorted_indices[index] = index;
+
     // Store the morton code
     this->keys[index] = mortonCode;
 }
 
-__device__ void BVHTree::growLeaf(int parent, int leaf) {
+__host__ __device__ void BVHTree::growLeaf(int parent, int leaf) {
     float4 bbMin = this->leaf_nodes.bbMin[leaf];
     float4 bbMax = this->leaf_nodes.bbMax[leaf];
 
@@ -90,7 +91,7 @@ __device__ void BVHTree::growLeaf(int parent, int leaf) {
     this->internal_nodes.bbMax[parent].z = fmaxf(bbMax.z, bbMaxParent.z);
 }
 
-__device__ void BVHTree::growInternal(int parent, int child) {
+__host__ __device__ void BVHTree::growInternal(int parent, int child) {
     float4 bbMinChild = this->internal_nodes.bbMin[child];
     float4 bbMaxChild = this->internal_nodes.bbMax[child];
 
@@ -106,7 +107,7 @@ __device__ void BVHTree::growInternal(int parent, int child) {
     this->internal_nodes.bbMax[parent].z = fmaxf(bbMaxChild.z, bbMaxParent.z);
 }
 
-__device__ void BVHTree::growBox(float4 &bbMinInput, float4 &bbMaxInput, float4 *bbMinOutput, float4 *bbMaxOutput) {
+__host__ __device__ void BVHTree::growBox(float4 &bbMinInput, float4 &bbMaxInput, float4 *bbMinOutput, float4 *bbMaxOutput) {
     bbMinOutput->x = fminf(bbMinInput.x, bbMinOutput->x);
     bbMinOutput->y = fminf(bbMinInput.y, bbMinOutput->y);
     bbMinOutput->z = fminf(bbMinInput.z, bbMinOutput->z);
@@ -116,7 +117,7 @@ __device__ void BVHTree::growBox(float4 &bbMinInput, float4 &bbMaxInput, float4 
     bbMaxOutput->z = fmaxf(bbMaxInput.z, bbMaxOutput->z);
 }
 
-__device__ int BVHTree::delta(int index) {
+__host__ __device__ int BVHTree::delta(int index) {
     // int sorted_index = index;
 
     if (index < 0 || index >= this->nb_keys - 1) {
@@ -132,7 +133,7 @@ __device__ int BVHTree::delta(int index) {
     return x + (!x) * (MIN_INT + (index ^ (index + 1))) - 1; // 
 }
 
-__device__ void BVHTree::setRope(Nodes *nodes, unsigned int skip_index, int range_right, delta_t delta_right) {
+__host__ __device__ void BVHTree::setRope(Nodes *nodes, unsigned int skip_index, int range_right, delta_t delta_right) {
     int rope;
 
     if (range_right != this->nb_keys - 1) {
@@ -145,7 +146,7 @@ __device__ void BVHTree::setRope(Nodes *nodes, unsigned int skip_index, int rang
     nodes->rope[skip_index] = rope;
 }
 
-__device__ int BVHTree::getRope(int index, int range_right, delta_t delta_right) {
+__host__ __device__ int BVHTree::getRope(int index, int range_right, delta_t delta_right) {
     int rope;
 
     if (range_right != this->nb_keys - 1) {
@@ -158,7 +159,7 @@ __device__ int BVHTree::getRope(int index, int range_right, delta_t delta_right)
     return rope;
 }
 
-__device__ void BVHTree::setInternalNode(int parent, int child_left, int rope, float4 bbMin, float4 bbMax) {
+__host__ __device__ void BVHTree::setInternalNode(int parent, int child_left, int rope, float4 bbMin, float4 bbMax) {
     if (parent >= this->internal_nodes.nb_nodes) {
         printf ("Error: Parent index out of bounds: %d\n", parent);
         return;
@@ -169,7 +170,7 @@ __device__ void BVHTree::setInternalNode(int parent, int child_left, int rope, f
     this->internal_nodes.bbMax[parent] = bbMax;
 }
 
-__device__ void BVHTree::setLeafNode(int index, int rope) {
+__host__ __device__ void BVHTree::setLeafNode(int index, int rope) {
     if (index >= this->leaf_nodes.nb_nodes) {
         printf ("Error: Leaf index out of bounds: %d\n", index);
         return;
@@ -208,7 +209,7 @@ __device__ void BVHTree::updateParents(int index) {
         if (delta_right < delta_left) {
             const int apetrei_parent = range_right;
 
-            range_right = atomicCAS_system(&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_left);
+            range_right = atomicCAS (&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_left);
             // printf ("Apetrei parent: %d\n", apetrei_parent);
             if (range_right == INVALID) {
                 return;
@@ -237,7 +238,7 @@ __device__ void BVHTree::updateParents(int index) {
         }
         else {
             int const apetrei_parent = range_left - 1;
-            range_left = atomicCAS_system(&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_right);
+            range_left = atomicCAS (&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_right);
             // printf ("Apetrei parent: %d\n", apetrei_parent);
 
             if (range_left == INVALID){
@@ -290,7 +291,7 @@ __device__ void BVHTree::updateParents(int index) {
     return;
 }
 
-__device__ bool overlapingAABBs(float4 bbMin1, float4 bbMax1, float4 bbMin2, float4 bbMax2) {
+__host__ __device__ bool overlapingAABBs(float4 bbMin1, float4 bbMax1, float4 bbMin2, float4 bbMax2) {
     if (bbMin1.x > bbMax2.x || bbMax1.x < bbMin2.x) {
         return false;
     }
@@ -337,7 +338,7 @@ __device__ bool overlapingAABBs(float4 bbMin1, float4 bbMax1, float4 bbMin2, flo
 //     while (current_node != SENTINEL);
 // }
 
-__device__ void BVHTree::query (Ray &ray, CollisionList &candidates) {
+__host__ __device__ void BVHTree::query (Ray &ray, CollisionList &candidates) {
     int current_node = this->internal_index(0);
 
     do {
@@ -376,7 +377,7 @@ __device__ void BVHTree::query (Ray &ray, CollisionList &candidates) {
     while (current_node != SENTINEL);
 }
 
-__device__ void BVHTree::query (float4 &bbMinQuery, float4 &bbMaxQuery, CollisionList &candidates) {
+__host__ __device__ void BVHTree::query (float4 &bbMinQuery, float4 &bbMaxQuery, CollisionList &candidates) {
     int current_node = this->internal_index(0);
 
     // printf ("Current node init: %d\n", current_node);
@@ -442,19 +443,19 @@ __device__ void BVHTree::query (float4 &bbMinQuery, float4 &bbMaxQuery, Collisio
 
 }
 
-__global__ void growTree (BVHTree *deviceTree) {
+__global__ void projectKeysKernel (BVHTree *deviceTree) {
     int index = threadIdx.x + blockIdx.x * blockDim.x;
 
-    while (index < deviceTree->nb_keys) {
+    while (index < deviceTree->getNbKeys()) {
         deviceTree->projectKeys(index);
         index += blockDim.x * gridDim.x;
     }
+}
 
-    __syncthreads();
+__global__ void growTreeKernel (BVHTree *deviceTree) {
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
 
-    index = threadIdx.x + blockIdx.x * blockDim.x;
-
-    while (index < deviceTree->nb_keys) {
+    while (index < deviceTree->getNbKeys()) {
         deviceTree->updateParents(index);
         index += blockDim.x * gridDim.x;
     }

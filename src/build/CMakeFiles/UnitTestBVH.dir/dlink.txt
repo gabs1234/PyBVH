@@ -1,0 +1,1 @@
+/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler  -arch=native -Xcompiler=-fPIC -Wno-deprecated-gpu-targets -shared -dlink --options-file CMakeFiles/UnitTestBVH.dir/deviceObjects1.rsp -o CMakeFiles/UnitTestBVH.dir/cmake_device_link.o --options-file CMakeFiles/UnitTestBVH.dir/deviceLinkLibs.rsp -L"/usr/lib/x86_64-linux-gnu" -L"/lib/x86_64-linux-gnu"

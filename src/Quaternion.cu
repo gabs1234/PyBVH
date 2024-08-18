@@ -1,7 +1,7 @@
 #include "Quaternion.cuh"
 #include "Commons.cuh"
 
-__device__ Quaternion::Quaternion() {
+__host__ __device__ Quaternion::Quaternion() {
     this->q.w = 1;
     this->q.x = 0;
     this->q.y = 0;
@@ -10,7 +10,7 @@ __device__ Quaternion::Quaternion() {
     this->norm = 1;
 }
 
-__device__ Quaternion::Quaternion(float4 q) {
+__host__ __device__ Quaternion::Quaternion(float4 q) {
     this->q.w = q.w;
     this->q.x = q.x;
     this->q.y = q.y;
@@ -24,7 +24,7 @@ __device__ Quaternion::Quaternion(float4 q) {
         this->isNormalized = false;
 }
 
-__device__ Quaternion::Quaternion(float4 q, float norm) {
+__host__ __device__ Quaternion::Quaternion(float4 q, float norm) {
     this->q.w = q.w;
     this->q.x = q.x;
     this->q.y = q.y;
@@ -38,7 +38,7 @@ __device__ Quaternion::Quaternion(float4 q, float norm) {
         this->isNormalized = false;
 }
 
-__device__ Quaternion::Quaternion(const Quaternion &p) {
+__host__ __device__ Quaternion::Quaternion(const Quaternion &p) {
     this->q.w = p.q.w;
     this->q.x = p.q.x;
     this->q.y = p.q.y;
@@ -54,15 +54,15 @@ __device__ Quaternion::Quaternion(const Quaternion &p) {
     }
 }
 
-__device__ float Quaternion::getReal() const {
+__host__ __device__ float Quaternion::getReal() const {
     return this->q.w;
 }
 
-__device__ float4 Quaternion::getImaginary() const {
+__host__ __device__ float4 Quaternion::getImaginary() const {
     return make_float4(this->q.x, this->q.y, this->q.z, 0);
 }
 
-__device__ float Quaternion::getNorm() {
+__host__ __device__ float Quaternion::getNorm() {
     if (this->isNormalized)
         return 1;
     else {
@@ -74,7 +74,7 @@ __device__ float Quaternion::getNorm() {
     return this->norm;
 }
 
-__device__ void Quaternion::normalize() {
+__host__ __device__ void Quaternion::normalize() {
     if (!this->isNormalized) {
         this->getNorm();
 
@@ -87,11 +87,11 @@ __device__ void Quaternion::normalize() {
     }
 }
 
-__device__ float4 Quaternion::getQuaternion () const {
+__host__ __device__ float4 Quaternion::getQuaternion () const {
     return this->q;
 }
 
-__device__ Quaternion Quaternion::getConjugate() const {
+__host__ __device__ Quaternion Quaternion::getConjugate() const {
     float4 result;
     result.w = this->q.w;
     result.x = -this->q.x;
@@ -101,13 +101,13 @@ __device__ Quaternion Quaternion::getConjugate() const {
     return Quaternion(result, this->norm);
 }
 
-__device__ Quaternion Quaternion::getInverse() {
+__host__ __device__ Quaternion Quaternion::getInverse() {
     float normSquared = this->getNorm();
     normSquared *= normSquared;
     return this->getConjugate() / normSquared;
 }
 
-__device__ Quaternion Quaternion::operator* (const float &s) {
+__host__ __device__ Quaternion Quaternion::operator* (const float &s) {
     float4 result;
     result.w = this->q.w * s;
     result.x = this->q.x * s;
@@ -116,7 +116,7 @@ __device__ Quaternion Quaternion::operator* (const float &s) {
     return Quaternion(result);
 }
 
-__device__ Quaternion Quaternion::operator/ (const float &s) {
+__host__ __device__ Quaternion Quaternion::operator/ (const float &s) {
     float4 result;
     result.w = this->q.w / s;
     result.x = this->q.x / s;
@@ -125,7 +125,7 @@ __device__ Quaternion Quaternion::operator/ (const float &s) {
     return Quaternion(result);
 }
 
-__device__ Quaternion Quaternion::operator+ (const Quaternion &p) {
+__host__ __device__ Quaternion Quaternion::operator+ (const Quaternion &p) {
     float4 result;
     result.w = this->q.w + p.q.w;
     result.x = this->q.x + p.q.x;
@@ -134,7 +134,7 @@ __device__ Quaternion Quaternion::operator+ (const Quaternion &p) {
     return Quaternion(result);
 }
 
-__device__ Quaternion Quaternion::operator- (const Quaternion &p) {
+__host__ __device__ Quaternion Quaternion::operator- (const Quaternion &p) {
     float4 result;
     result.w = this->q.w - p.q.w;
     result.x = this->q.x - p.q.x;
@@ -143,7 +143,7 @@ __device__ Quaternion Quaternion::operator- (const Quaternion &p) {
     return Quaternion(result);
 }
 
-__device__ Quaternion Quaternion::operator- () {
+__host__ __device__ Quaternion Quaternion::operator- () {
     float4 result;
     result.w = -this->q.w;
     result.x = -this->q.x;
@@ -152,7 +152,7 @@ __device__ Quaternion Quaternion::operator- () {
     return Quaternion(result);
 }
 
-__device__ Quaternion Quaternion::operator* (const Quaternion &b) {
+__host__ __device__ Quaternion Quaternion::operator* (const Quaternion &b) {
     // Stupid notation because following the book
     float4 q = b.q;
     float4 pf = this->q;

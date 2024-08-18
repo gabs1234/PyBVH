@@ -3,3 +3,5 @@
 src/blender/*
 src/.vscode/*
 src/__pycache__/
+src/build
+src/cccl

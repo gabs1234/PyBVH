@@ -1,11 +1,11 @@
-from Optimizer import *
+from deprecated.Optimizer import *
 from Builder import *
-from Collapser import *
+from deprecated.Collapser import *
 from MeshReader import *
 from SceneManager import *
 from BVHTree import BVHTree
 from CudaPipeline import CudaPipeline
-from Render import Render
+from deprecated.Render import Render
 from MeshGenerator import GenerateRandomPoints
 # Measure time
 import time

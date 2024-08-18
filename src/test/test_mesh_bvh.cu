@@ -1,9 +1,11 @@
 #include <iostream>
 #include <limits>
 #include <math.h>
+#include <opencv2/opencv.hpp>
 
 #include "../Ray.cuh"
 #include "../tree_prokopenko.cuh"
+#include "../SceneManager.cuh"
 
 using namespace std;
 
@@ -29,92 +31,103 @@ namespace Color {
     };
 }
 
-typedef struct {
-    float3 v1, v2, v3;
-} Triangle;
+Color::Modifier red(Color::FG_RED);
+Color::Modifier green(Color::FG_GREEN);
 
-// void create_triangle_ray_couple (Ray &ray, Triangle &triangle) {
-//     ray = Ray(
-//         make_float3(0, 0, 0),
-//         make_float3(1, 0, 0)
-//     );
-//     triangle = Triangle {
-//         make_float3(0, 0, 0),
-//         make_float3(1, 0, 0),
-//         make_float3(0, 1, 0)
-//     };
-// }
+/**
+ * Non-overlaping triangles
+ * 1 |     |
+ * .5| \   | \ [...]
+ * 0 _  _  _  _
+ *   0  .5 1  1.5 
+ */
+Scene create_non_overlaping_triangles (unsigned int N) {
+    float4 *vertices = new float4[N * 3];
+    float4 *bbMinLeaf = new float4[N];
+    float4 *bbMaxLeaf = new float4[N];
 
-__global__ void buildTreeProkopenko(BVHTree *tree, unsigned int nb_keys) {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
+    for (unsigned int i = 0; i < N; i++) {
+        vertices[i * 3 + 0] = make_float4(i, 0.0, 0.0, 0.0);
+        vertices[i * 3 + 2] = make_float4(i + .5, 0.0, 0.0, 0.0);
+        vertices[i * 3 + 1] = make_float4(i, 1.0, 0.0, 0.0);
 
-    while (index < nb_keys) {
-        tree->updateParents(index);
-
-        // printf ("INDEX: %d\n", index);
-
-        index += blockDim.x * gridDim.x;
+        bbMinLeaf[i] = make_float4(i, 0.0, 0.0, 0.0);
+        bbMaxLeaf[i] = make_float4(i + .5, 1.0, 0.0, 0.0);
     }
+    
+    Scene scene;
+    scene.vertices = vertices;
+    scene.bbMinLeaf = bbMinLeaf;
+    scene.bbMaxLeaf = bbMaxLeaf;
+    scene.bbMinScene = make_float4(0, 0, 0, 0);
+    scene.bbMaxScene = make_float4(N, 1, 0, 0);
+
+    return scene;
 }
 
-__global__ void *create_bvh (
-    BVHTree *tree, uint nb_keys, morton_t *keys, uint *sorted_indices,
-    float4 *bbMinScene, float4 *bbMaxScene,
-    float4 *bbMinLeaf, float4 *bbMaxLeaf,
-    float4 *bbMinInternal, float4 *bbMaxInternal,
-    int *left_range, int *right_range,
-    int *left_child, int *right_child,
-    int *entered, int *rope_leaf, int *rope_internal) {
-    
-    cudaMalloc(&tree, sizeof(BVHTree));
-    cudaMalloc(&keys, nb_keys * sizeof(morton_t));
-    cudaMalloc(&sorted_indices, nb_keys * sizeof(uint));
-    cudaMalloc(&bbMinScene, sizeof(float4));
-    cudaMalloc(&bbMaxScene, sizeof(float4));
-    cudaMalloc(&bbMinLeaf, nb_keys * sizeof(float4));
-    cudaMalloc(&bbMaxLeaf, nb_keys * sizeof(float4));
-    cudaMalloc(&bbMinInternal, (nb_keys - 1) * sizeof(float4));
-    cudaMalloc(&bbMaxInternal, (nb_keys - 1) * sizeof(float4));
-    cudaMalloc(&left_range, (nb_keys - 1) * sizeof(int));
-    cudaMalloc(&right_range, (nb_keys - 1) * sizeof(int));
-    cudaMalloc(&left_child, (nb_keys - 1) * sizeof(int));
-    cudaMalloc(&right_child, (nb_keys - 1) * sizeof(int));
-    cudaMalloc(&entered, (nb_keys - 1) * sizeof(int));
-    cudaMalloc(&rope_leaf, nb_keys * sizeof(int));
-    cudaMalloc(&rope_internal, (nb_keys - 1) * sizeof(int));
-    
-    Nodes leaf_nodes;
-    leaf_nodes.nb_nodes = nb_keys;
-    leaf_nodes.bbMin = bbMinLeaf;
-    leaf_nodes.bbMax = bbMaxLeaf;
-    leaf_nodes.rope = rope_leaf;
-
-    Nodes internal_nodes;
-    internal_nodes.nb_nodes = nb_keys - 1;
-    internal_nodes.bbMin = bbMinInternal;
-    internal_nodes.bbMax = bbMaxInternal;
-    internal_nodes.rope = rope_internal;
-    internal_nodes.left_range = left_range;
-    internal_nodes.right_range = right_range;
-    internal_nodes.left_child = left_child;
-    internal_nodes.right_child = right_child;
-    internal_nodes.entered = entered;
-
-    tree->setLeafNodes(leaf_nodes);
-    tree->setInternalNodes(internal_nodes);
-    tree->setSortedIndices(sorted_indices);
+void free_scene (Scene scene) {
+    delete[] scene.vertices;
+    delete[] scene.bbMinLeaf;
+    delete[] scene.bbMaxLeaf;
 }
+
 int main() {
-    Color::Modifier red(Color::FG_RED);
-    Color::Modifier green(Color::FG_GREEN);
+    // Get the bbMin and bbMax of the scene, and the bbMins and bbMaxs of the leafs
+    unsigned int N = 10;
+    Scene scene = create_non_overlaping_triangles(N);
+    float4 *vertices = scene.vertices;
+    float4 *bbMinLeaf = scene.bbMinLeaf;
+    float4 *bbMaxLeaf = scene.bbMaxLeaf;
+    float4 bbMinScene = scene.bbMinScene;
+    float4 bbMaxScene = scene.bbMaxScene;
 
-    bool output = false;
 
-    if (output) {
-        cout << green << "Test " << "TODO" << " passed" << endl;
-    } else {
-        cout << red << "Test " << "TODO" << " failed" << endl;
-    }
+    // Manage the device
+    SceneManager manager(
+        N, bbMinLeaf, bbMaxLeaf, 
+        bbMinScene, bbMaxScene, 
+        vertices);
+
+    // manager.printNodes();
+
+    manager.setupAccelerationStructure();
+
+    // pi
+    float pi = M_PI;
+
+
+    uint2 n = make_uint2(600, 400);
+    float2 D = make_float2(20, 10);
+    float4 spherical = make_float4(pi, 0, 1, 0);
+    float4 euler = make_float4(0, 0, 0, 0);
+    float4 meshOrigin = make_float4(-10, 5, 0, 0);
+
+    float *image = manager.projectPlaneRays(n, D, spherical, euler, meshOrigin);
+    // CollisionList primitives = manager.getCollisionList(2);
+
+    // // Show the collision list
+    // for (int i = 0; i < primitives.count; i++) {
+    //     cout << "Collision at " << primitives.collisions[i] << endl;
+    // }
+
+
+    // Test the results
+    cv::Mat img(n.y, n.x, CV_32F, image);
+    cv::imshow("image", img);
+
+    cv::waitKey(0);
+
+    // Free the scene
+    free_scene(scene);
+
+
+    // bool output = false;
+
+    // if (output) {
+    //     cout << green << "Test " << "TODO" << " passed" << endl;
+    // } else {
+    //     cout << red << "Test " << "TODO" << " failed" << endl;
+    // }
 
     return 0;
 }

@@ -1,14 +1,12 @@
-#include "Quaternion.cuh"
 #include "RotationQuaternion.cuh"
-#include "Commons.cuh"
 
-__device__ RotationQuaternion::RotationQuaternion() : Quaternion() {
+__host__ __device__ RotationQuaternion::RotationQuaternion() : Quaternion() {
     this->angle = 0;
     this->axis = make_float4(0, 0, 1, 0);
 }
 
 //Copy constructor
-__device__ RotationQuaternion::RotationQuaternion(const RotationQuaternion &rq) {
+__host__ __device__ RotationQuaternion::RotationQuaternion(const RotationQuaternion &rq) {
     this->angle = rq.angle;
     this->axis = rq.axis;
     this->halfAngle = rq.halfAngle;
@@ -20,7 +18,7 @@ __device__ RotationQuaternion::RotationQuaternion(const RotationQuaternion &rq) 
     this->norm = rq.norm;
 }
 
-__device__ RotationQuaternion::RotationQuaternion(float angle, float4 axis) {
+__host__ __device__ RotationQuaternion::RotationQuaternion(float angle, float4 axis) {
     this->angle = angle;
     this->halfAngle = this->angle / 2;
     this->cosHalfAngle = cosf(this->halfAngle);
@@ -36,24 +34,24 @@ __device__ RotationQuaternion::RotationQuaternion(float angle, float4 axis) {
     this->isNormalized = true;
 }
 
-__device__ void RotationQuaternion::setAngle(float angle) {
+__host__ __device__ void RotationQuaternion::setAngle(float angle) {
     this->angle = angle;
 }
 
-__device__ void RotationQuaternion::setAxis(float4 axis) {
+__host__ __device__ void RotationQuaternion::setAxis(float4 axis) {
     this->axis = axis;
 }
 
-__device__ float RotationQuaternion::getAngle() const {
+__host__ __device__ float RotationQuaternion::getAngle() const {
     return this->angle;
 }
 
-__device__ float4 RotationQuaternion::getAxis() const {
+__host__ __device__ float4 RotationQuaternion::getAxis() const {
     return this->axis;
 }
 
-__device__ float4 RotationQuaternion::rotate(float4 v) {
-    Quaternion p = Quaternion(v);
+__host__ __device__ float4 RotationQuaternion::rotate(float4 vector) {
+    Quaternion p = Quaternion(vector);
     // p.setReal(0);
     Quaternion left_hand = *this;
     Quaternion right_hand = this->isNormalized ? this->getConjugate() : this->getInverse();

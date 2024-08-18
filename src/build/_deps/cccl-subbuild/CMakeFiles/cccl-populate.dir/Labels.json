@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/CMakeFiles/cccl-populate"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/CMakeFiles/cccl-populate.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/CMakeFiles/cccl-populate-complete.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-build.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-configure.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-download.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-install.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-mkdir.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-patch.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-test.rule"
+		},
+		{
+			"file" : "/home/lt0649/Dev/PyBVH/src/build/_deps/cccl-subbuild/cccl-populate-prefix/src/cccl-populate-stamp/cccl-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"cccl-populate"
+		],
+		"name" : "cccl-populate"
+	}
+}

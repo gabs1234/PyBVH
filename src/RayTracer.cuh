@@ -1,24 +1,29 @@
 
 #pragma once
 #include "tree_prokopenko.cuh"
+#include "Ray.cuh"
+#include "Basis.cuh"
 #include "Commons.cuh"
 
 class BVHTree;
 
 class RayTracer {
 public:
-    __device__ RayTracer(BVHTree *tree, float4 origin, float4 *vertices, unsigned int nbVertices, bool parallelGeometry);
+    __host__ __device__ RayTracer(BVHTree *tree, float4 *vertices, unsigned int nb_vertices);
+    __host__ __device__ RayTracer(BVHTree *tree, float4 origin, float4 *vertices, unsigned int nb_vertices, bool parallelGeometry);
 
-    __device__ float4 sphericalToCartesian(float theta, float phi, float r);
-    __device__ void rotateBasis (float4 &u1, float4 &u2, float4 &u3, float theta, float phi);
-    __device__ Basis makeProjectionBasis (Basis &MeshBasis, float4 &spherical, float4 &euler);
-    __device__ bool computeRayAABB(float4 &O, float4 &min, float4 &max);
-    __device__ float4 computeRayParametric(float t);
-    __device__ bool hasParallelGeometry() { return this->parallelGeometry; };
+    __host__ __device__ float4 sphericalToCartesian(float theta, float phi, float r);
+    __host__ __device__ BasisNamespace::Basis makeProjectionBasis (BasisNamespace::Basis &MeshBasis, float4 &spherical, float4 &euler);
+    __host__ __device__ bool computeRayAABB(float4 &O, float4 &min, float4 &max);
+    __host__ __device__ float4 computeRayParametric(float t);
+    __host__ __device__ bool hasParallelGeometry() { return this->parallelGeometry; };
+    __host__ __device__ float4* getVertices() { return this->vertices; };
 
-    __device__ float traceRayParallel(Ray &ray);
+    __host__ __device__ float traceRayParallel(Ray &ray);
 
-    __device__ void printRayTracer() {
+    __host__ __device__ void testSingleRay(Ray ray, CollisionList *collisions);
+
+    __host__ __device__ void printRayTracer() {
         printf("Hello from RayTracer\n");
         printf("raySet: %d\n", raySet);
         printf("parallelGeometry: %d\n", parallelGeometry);
@@ -37,3 +42,7 @@ private:
     float4 reference_direction;
     float4 reference_origin;
 };
+
+__global__ void projectPlaneRaysKernel (
+    RayTracer *tracer, float *image, uint2 N, float2 D,
+    float4 spherical, float4 euler, float4 meshOrigin);
