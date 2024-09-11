@@ -1,3 +1,6 @@
+#include <thrust/sort.h>
+#include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 
 #pragma once
 #include "tree_prokopenko.cuh"
@@ -19,7 +22,7 @@ public:
     __host__ __device__ bool hasParallelGeometry() { return this->parallelGeometry; };
     __host__ __device__ float4* getVertices() { return this->vertices; };
 
-    __host__ __device__ float traceRayParallel(Ray &ray);
+    __device__ float traceRayParallel(Ray &ray);
 
     __host__ __device__ void testSingleRay(Ray ray, CollisionList *collisions);
 
@@ -28,6 +31,15 @@ public:
         printf("raySet: %d\n", raySet);
         printf("parallelGeometry: %d\n", parallelGeometry);
         printf("tree: %p\n", tree);
+    }
+
+    __host__ __device__ void getSceneBB(float4 &bbMin, float4 &bbMax) {
+        bbMin = this->tree->getSceneBBMin();
+        bbMax = this->tree->getSceneBBMax();
+    }
+
+    __host__ __device__ int getNbKeys() {
+        return this->tree->getNbKeys();
     }
 
 private:

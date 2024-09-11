@@ -1,67 +1,102 @@
 #include "SceneManager.cuh"
-// include thrust sort
 // #define THRUST_IGNORE_CUB_VERSION_CHECK
 #include <cuda_runtime.h>
 #include <vector>
+#include <random>
 #include <algorithm>
 #include <numeric>
-// #include <thrust/device_vector.h>
-// #include <thrust/execution_policy.h>
-// #include <thrust/device_ptr.h>
-// #include <thrust/sort.h>
 
-template<typename T>
-std::vector<size_t> argsort(const std::vector<T> &array) {
-    std::vector<size_t> indices(array.size());
-    std::iota(indices.begin(), indices.end(), 0);
-    std::sort(indices.begin(), indices.end(),
-              [&array](int left, int right) -> bool {
-                  // sort indices according to corresponding array element
-                  return array[left] < array[right];
-              });
+// Functor to find the minimum float4 element-wise
+struct float4_min {
+    __host__ __device__
+    float4 operator()(const float4& a, const float4& b) const {
+        float4 result;
+        result.x = fminf(a.x, b.x);
+        result.y = fminf(a.y, b.y);
+        result.z = fminf(a.z, b.z);
+        result.w = fminf(a.w, b.w);
+        return result;
+    }
+};
 
-    return indices;
-}
+struct float4_max {
+    __host__ __device__
+    float4 operator()(const float4& a, const float4& b) const {
+        float4 result;
+        result.x = fmaxf(a.x, b.x);
+        result.y = fmaxf(a.y, b.y);
+        result.z = fmaxf(a.z, b.z);
+        return result;
+    }
+};
 
-__global__ void initializeTreeKernel (
-    BVHTree *tree, unsigned int nb_keys, float4 *vertices,
-    morton_t *keys, unsigned int *sorted_indices,
-    float4 bbMinScene, float4 bbMaxScene,
-    Nodes internal_nodes, Nodes leaf_nodes) {
+// __global__ void initializeTreeStructureKernel (
+//     BVHTree *tree, unsigned int nb_keys, float4 *vertices,
+//     float4 bbMinScene, float4 bbMaxScene,
+//     morton_t *device_keys, unsigned int *sorted_indices,
+//     Nodes internal_nodes, Nodes leaf_nodes) {
+//     unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+//     if (tid >= 1) {
+//         return;
+//     }
     
+//     new (tree) BVHTree(nb_keys, device_keys);
+//     tree->setSortedIndices(sorted_indices);
+//     tree->setInternalNodes(internal_nodes);
+//     tree->setLeafNodes(leaf_nodes);
+//     tree->setSceneBB(bbMinScene, bbMaxScene);
+// }
+
+__global__ void calculateBbBoxKernel (float4 *vertices, float4 *bbMin, float4 *bbMax, unsigned int nb_keys) {
     unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    if (tid != 0) {
-        return;
+
+    while (tid < nb_keys) {
+        float4 V1 = vertices[tid * 3];
+        float4 V2 = vertices[tid * 3 + 1];
+        float4 V3 = vertices[tid * 3 + 2];
+        calculateTriangleBoundingBox (V1, V2, V3, &(bbMin[tid]), &(bbMax[tid]));
+
+        tid += blockDim.x * gridDim.x;
     }
-
-    // print the bbmaxscene
-    printf("bbMaxScene = (%f, %f, %f, %f)\n", bbMaxScene.x, bbMaxScene.y, bbMaxScene.z, bbMaxScene.w);
-    printf("bbMinScene = (%f, %f, %f, %f)\n", bbMinScene.x, bbMinScene.y, bbMinScene.z, bbMinScene.w);
-    // Set the entered and left child to -1
-    for (int i = 0; i < nb_keys - 1; i++) {
-        internal_nodes.entered[i] = -1;
-        internal_nodes.left_child[i] = -1;
-        internal_nodes.rope[i] = -1;
-        leaf_nodes.rope[i] = -1;
-    }
-
-    new (tree) BVHTree(nb_keys, keys);
-    tree->setSceneBB(bbMinScene, bbMaxScene);
-    tree->setSortedIndices(sorted_indices);
-    tree->setInternalNodes(internal_nodes);
-    tree->setLeafNodes(leaf_nodes);
-
-    // // Print tree
-    // tree->printTree();
+    
 }
 
-__global__ void initializeRayTracerKernel (RayTracer *ray_tracer, BVHTree *tree, float4 *vertices) {
-    unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    if (tid != 0) {
-        return;
-    }
+__global__ void projectKeys(
+        Scene scene, morton_t *keys, unsigned *sorted_indices,
+        Nodes inodes, Nodes lnodes) {
 
-    new (ray_tracer) RayTracer(tree, vertices, tree->getNbKeys());
+    unsigned int index = threadIdx.x + blockIdx.x * blockDim.x;
+
+    while (index < scene.nb_keys) {
+        // Calculate the centroid of the AABB
+        float4 centroid = getBoundingBoxCentroid(scene.bbMinLeaf[index], scene.bbMaxLeaf[index]);
+        
+        float4 normalizedCentroid = normalize(centroid, scene.bbMinScene, scene.bbMaxScene);
+
+        // Calculate the morton code of the triangle
+        morton_t mortonCode = calculateMortonCode(normalizedCentroid);
+
+        // Store the morton code
+        keys[index] = mortonCode;
+
+        // Setup the sorted indices + Node structure
+        sorted_indices[index] = index;
+        inodes.entered[index] = INVALID;
+        inodes.left_child[index] = SENTINEL;
+        inodes.rope[index] = SENTINEL;
+        lnodes.rope[index] = SENTINEL;
+
+        index += blockDim.x * gridDim.x;
+    }
+}
+
+__global__ void growTreeKernel (BVHTree *deviceTree) {
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+
+    while (index < deviceTree->getNbKeys()) {
+        deviceTree->updateParents(index);
+        index += blockDim.x * gridDim.x;
+    }
 }
 
 __global__ void printTreeKernel (BVHTree *tree) {
@@ -79,8 +114,29 @@ __global__ void testSingleRayKernel (RayTracer *ray_tracer, unsigned int primiti
         return;
     }
 
+    float4 scene_bbMin, scene_bbMax;
+    ray_tracer->getSceneBB(scene_bbMin, scene_bbMax);
+
+    int nb_keys = ray_tracer->getNbKeys();
+
+    float dx = (scene_bbMax.x - scene_bbMin.x) / (nb_keys );
+    float dy = (scene_bbMax.y - scene_bbMin.y) / (nb_keys );
+
     float4* vertices = ray_tracer->getVertices();
-    float4 V1 = vertices[primitive_index];
+
+    // // print the vertices
+    // for (int i = 0; i < 3; i++) {
+    //     float4 V1 = vertices[primitive_index + i];
+    //     printf("V1[%d] = (%f, %f, %f, %f)\n", i, V1.x, V1.y, V1.z, V1.w);
+    // }
+
+    float4 V1 = vertices[primitive_index+1];
+    V1.z = -5;
+    V1.x += dx/4;
+    V1.y += dy/4;
+
+    // printf ("ray origin = (%f, %f, %f, %f)\n", V1.x, V1.y, V1.z, V1.w);
+
     float4 direction = make_float4(0, 0, 1, 0);
 
     Ray ray = Ray(V1, direction);
@@ -88,209 +144,263 @@ __global__ void testSingleRayKernel (RayTracer *ray_tracer, unsigned int primiti
     ray_tracer->testSingleRay(ray, collisions);
 }
 
+// __global__ void descendTreeKernel (BVHTree *tree, int *left_child, int *right_child) {
+//     unsigned int tid = threadIdx.x + blockIdx.x * blockDim.x;
+//     if (tid != 0) {
+//         return;
+//     }
 
-SceneManager::SceneManager (
-    unsigned int N, float4 *bbMin, float4 *bbMax, 
-    float4 bbMinScene, float4 bbMaxScene, float4 *vertices) : nb_keys(N) {
+//     tree->traverse(left_child, right_child);
+// }
 
-    // /** Setup the host variables **/
-    // host_keys = new morton_t[nb_keys];
-    // host_sorted_indices = new unsigned int[nb_keys];
-    // host_bbMinLeaf = bbMin;
-    // host_bbMaxLeaf = bbMax;
-
-    // host_internal_nodes.nb_nodes = nb_keys;
-    // host_internal_nodes.bbMin = new float4[nb_keys];
-    // host_internal_nodes.bbMax = new float4[nb_keys];
-    // host_internal_nodes.rope = new int[nb_keys];
-    // host_internal_nodes.left_child = new int[nb_keys];
-    // host_internal_nodes.entered = new int[nb_keys];
-
-    // host_leaf_nodes.nb_nodes = nb_keys;
-    // host_leaf_nodes.bbMin = new float4[nb_keys];
-    // host_leaf_nodes.bbMax = new float4[nb_keys];
-    // host_leaf_nodes.rope = new int[nb_keys];
-
-    // new (host_tree) BVHTree(nb_keys, host_keys);
-    // host_tree->setSceneBB(bbMinScene, bbMaxScene);
-    // host_tree->setSortedIndices(host_sorted_indices);
-    // host_tree->setInternalNodes(host_internal_nodes);
-    // host_tree->setLeafNodes(host_leaf_nodes);
-    
-    /** Setup the device variables **/
+SceneManager::SceneManager (unsigned int N) : nb_keys(N) {
+    // Allocate the geometry
+    cudaCheckError (cudaMallocManaged(&device_vertices, nb_keys * 3 * sizeof(float4)));
     cudaCheckError (cudaMallocManaged(&device_keys, nb_keys * sizeof(morton_t)));
     cudaCheckError (cudaMallocManaged(&device_sorted_indices, nb_keys * sizeof(unsigned int)));
 
-    Nodes tmp_internal_nodes;
+    // Allocate the internal nodes
     cudaCheckError (cudaMallocManaged(&device_internal_nodes.bbMin, (nb_keys) * sizeof(float4)));
     cudaCheckError (cudaMallocManaged(&device_internal_nodes.bbMax, (nb_keys) * sizeof(float4)));
     cudaCheckError (cudaMallocManaged(&device_internal_nodes.rope, (nb_keys) * sizeof(int)));
     cudaCheckError (cudaMallocManaged(&device_internal_nodes.left_child, (nb_keys) * sizeof(int)));
     cudaCheckError (cudaMallocManaged(&device_internal_nodes.entered, (nb_keys) * sizeof(int)));
-    
-    tmp_internal_nodes.nb_nodes = nb_keys;
-    tmp_internal_nodes.bbMin = device_internal_nodes.bbMin;
-    tmp_internal_nodes.bbMax = device_internal_nodes.bbMax;
-    tmp_internal_nodes.rope = device_internal_nodes.rope;
-    tmp_internal_nodes.left_child = device_internal_nodes.left_child;
-    tmp_internal_nodes.entered = device_internal_nodes.entered;
-    
-    Nodes tmp_leaf_nodes;
-    cudaCheckError (cudaMallocManaged(&device_leaf_nodes.bbMin, nb_keys * sizeof(float4)));
-    cudaCheckError (cudaMemcpy((void*)device_leaf_nodes.bbMin, (void*)bbMin, nb_keys * sizeof(float4), cudaMemcpyHostToDevice));
-    cudaCheckError (cudaMallocManaged(&device_leaf_nodes.bbMax, nb_keys * sizeof(float4)));
-    cudaCheckError (cudaMemcpy((void*)device_leaf_nodes.bbMax, (void*)bbMax, nb_keys * sizeof(float4), cudaMemcpyHostToDevice));
+
+    // Allocate the leaf nodes
     cudaCheckError (cudaMallocManaged(&device_leaf_nodes.rope, nb_keys * sizeof(int)));
-    tmp_leaf_nodes.nb_nodes = nb_keys;
-    tmp_leaf_nodes.bbMin = device_leaf_nodes.bbMin;
-    tmp_leaf_nodes.bbMax = device_leaf_nodes.bbMax;
-    tmp_leaf_nodes.rope = device_leaf_nodes.rope;
+    cudaCheckError (cudaMallocManaged(&device_leaf_nodes.bbMin, nb_keys * sizeof(float4)));
+    cudaCheckError (cudaMallocManaged(&device_leaf_nodes.bbMax, nb_keys * sizeof(float4)));
 
-    // Tree structure
-    cudaCheckError (cudaMallocManaged (&device_tree, sizeof(BVHTree)));
-    initializeTreeKernel<<<1, 1>>>(device_tree, nb_keys, vertices, device_keys, device_sorted_indices, bbMinScene, bbMaxScene, tmp_internal_nodes, tmp_leaf_nodes);
-    cudaCheckError (cudaDeviceSynchronize());
-
-    // Setup the ray tracer
+    // Allocate the tree and the ray tracer
+    cudaCheckError (cudaMallocManaged(&device_tree, sizeof(BVHTree)));
     cudaCheckError (cudaMallocManaged(&device_ray_tracer, sizeof(RayTracer)));
-    cudaCheckError (cudaMallocManaged(&device_vertices, nb_keys * 3 * sizeof(float4)));
-    cudaCheckError (cudaMemcpy(device_vertices, vertices, nb_keys * 3 * sizeof(float4), cudaMemcpyHostToDevice));
-    initializeRayTracerKernel<<<1, 1>>>(device_ray_tracer, device_tree, device_vertices);
-    cudaCheckError (cudaDeviceSynchronize());
+
+    std::cout << "SceneManager created with " << nb_keys << " keys" << std::endl;
 }
 
-SceneManager::~SceneManager() {
-    // delete[] host_keys;
-    // delete[] host_sorted_indices;
-    // delete[] host_bbMinLeaf;
-    // delete[] host_bbMaxLeaf;
-    // delete[] host_internal_nodes.bbMin;
-    // delete[] host_internal_nodes.bbMax;
-    // delete[] host_internal_nodes.rope;
-    // delete[] host_internal_nodes.left_child;
-    // delete[] host_internal_nodes.entered;
-    // delete[] host_leaf_nodes.bbMin;
-    // delete[] host_leaf_nodes.bbMax;
-    // delete[] host_leaf_nodes.rope;
-
-    cudaFree(device_keys);
-    cudaFree(device_sorted_indices);
-    cudaFree(device_internal_nodes.bbMin);
-    cudaFree(device_internal_nodes.bbMax);
-    cudaFree(device_internal_nodes.rope);
-    cudaFree(device_internal_nodes.left_child);
-    cudaFree(device_leaf_nodes.bbMin);
-    cudaFree(device_leaf_nodes.bbMax);
-    cudaFree(device_leaf_nodes.rope);
-    cudaFree(device_tree);
-    cudaFree(device_ray_tracer);
-}
-
-void SceneManager::deviceToHost () {
-    // Simply copy the Nodes structure
-    cudaMemcpy(host_internal_nodes.bbMin, device_internal_nodes.bbMin, (nb_keys - 1) * sizeof(float4), cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_internal_nodes.bbMax, device_internal_nodes.bbMax, (nb_keys - 1) * sizeof(float4), cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_internal_nodes.rope, device_internal_nodes.rope, (nb_keys - 1) * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_internal_nodes.left_child, device_internal_nodes.left_child, (nb_keys - 1) * sizeof(int), cudaMemcpyDeviceToHost);
-
-    cudaMemcpy(host_leaf_nodes.bbMin, device_leaf_nodes.bbMin, nb_keys * sizeof(float4), cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_leaf_nodes.bbMax, device_leaf_nodes.bbMax, nb_keys * sizeof(float4), cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_leaf_nodes.rope, device_leaf_nodes.rope, nb_keys * sizeof(int), cudaMemcpyDeviceToHost);
-}
-
-void SceneManager::printNodes () {
-    for (int i = 0; i < nb_keys - 1; i++) {
-        printf("Internal node %d\n", i);
-        printf("bbMin = (%f, %f, %f, %f)\n", host_internal_nodes.bbMin[i].x, host_internal_nodes.bbMin[i].y, host_internal_nodes.bbMin[i].z, host_internal_nodes.bbMin[i].w);
-        printf("bbMax = (%f, %f, %f, %f)\n", host_internal_nodes.bbMax[i].x, host_internal_nodes.bbMax[i].y, host_internal_nodes.bbMax[i].z, host_internal_nodes.bbMax[i].w);
-        printf("rope = %d\n", host_internal_nodes.rope[i]);
-        printf("left_child = %d\n", host_internal_nodes.left_child[i]);
-    }
-
-    for (int i = 0; i < nb_keys; i++) {
-        printf("Leaf node %d\n", i);
-        printf("bbMin = (%f, %f, %f, %f)\n", host_leaf_nodes.bbMin[i].x, host_leaf_nodes.bbMin[i].y, host_leaf_nodes.bbMin[i].z, host_leaf_nodes.bbMin[i].w);
-        printf("bbMax = (%f, %f, %f, %f)\n", host_leaf_nodes.bbMax[i].x, host_leaf_nodes.bbMax[i].y, host_leaf_nodes.bbMax[i].z, host_leaf_nodes.bbMax[i].w);
-        printf("rope = %d\n", host_leaf_nodes.rope[i]);
-    }
-}
-
-void SceneManager::setupAccelerationStructure () {
+SceneManager::SceneManager (float4 *vertices, unsigned int N, float4 bbMinScene, float4 bbMaxScene) : SceneManager(N) {
     int blockSize = 256;
     int numBlocks = (nb_keys + blockSize - 1) / blockSize;
 
-    // Generate the morton keys
-    projectKeysKernel<<<numBlocks, blockSize>>>(device_tree);
+    // Print the number of keys
+    std::cout << "Number of keys = " << nb_keys << std::endl;
+    
+    // Copy the vertices to the device
+    std::cout << "Copying the vertices to the device" << std::endl;
+    for (size_t i = 0; i < nb_keys * 3; i++) {
+        device_vertices[i] = vertices[i];
+    }
+    
+    // Calculate the bounding boxes
+    std::cout << "Calculating the bounding boxes" << std::endl;
+    calculateBbBoxKernel<<<numBlocks, blockSize>>>(device_vertices, device_leaf_nodes.bbMin, device_leaf_nodes.bbMax, nb_keys);
+    cudaDeviceSynchronize();
+    CUDA_KERNEL_LAUNCH_CHECK();
 
-    cudaError_t err = cudaDeviceSynchronize();
-    if (err != cudaSuccess) {
-        std::cerr << "yo Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
+    device_bbMinScene = bbMinScene;
+    device_bbMaxScene = bbMaxScene;
+
+    this->device_scene.nb_keys = nb_keys;
+    this->device_scene.vertices = device_vertices;
+    this->device_scene.bbMinLeaf = device_leaf_nodes.bbMin;
+    this->device_scene.bbMaxLeaf = device_leaf_nodes.bbMax;
+    this->device_scene.bbMinScene = device_bbMinScene;
+    this->device_scene.bbMaxScene = device_bbMaxScene;
+}
+
+SceneManager::SceneManager (Scene &scene) : SceneManager(scene.nb_keys) {
+    this->scene = scene;
+
+    std::cout << "Copying the scene to the device with " << nb_keys << " keys" << std::endl;
+    for (size_t i = 0; i < nb_keys; i++) {
+        device_leaf_nodes.bbMin[i] = scene.bbMinLeaf[i];
+        device_leaf_nodes.bbMax[i] = scene.bbMaxLeaf[i];
+    }
+    for (size_t i = 0; i < nb_keys * 3; i++) {
+        device_vertices[i] = scene.vertices[i];
     }
 
-    // // Sort the keys
-    // cub::DeviceRadixSort::SortPairs(NULL, err, device_keys, device_keys, device_sorted_indices, device_sorted_indices, nb_keys);
+    device_bbMinScene = scene.bbMinScene;
+    device_bbMaxScene = scene.bbMaxScene;
 
-    // // Print the tree
-    // printTreeKernel<<<1, 1>>>(device_tree);
-    // err = cudaDeviceSynchronize();
-    // if (err != cudaSuccess) {
-    //     std::cerr << "Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
-    // }
+    this->device_scene.nb_keys = nb_keys;
+    this->device_scene.vertices = device_vertices;
+    this->device_scene.bbMinLeaf = device_leaf_nodes.bbMin;
+    this->device_scene.bbMaxLeaf = device_leaf_nodes.bbMax;
+    this->device_scene.bbMinScene = device_bbMinScene;
+    this->device_scene.bbMaxScene = device_bbMaxScene;
+
+    std::cout << "Scene bounding box min = (" << device_bbMinScene.x << ", " << device_bbMinScene.y << ", " << device_bbMinScene.z << ", " << device_bbMinScene.w << ")" << std::endl;
+    std::cout << "Scene bounding box max = (" << device_bbMaxScene.x << ", " << device_bbMaxScene.y << ", " << device_bbMaxScene.z << ", " << device_bbMaxScene.w << ")" << std::endl;
+}
+
+void SceneManager::setupAccelerationStructure () {
+    unsigned blockSize = 256;
+    unsigned numBlocks = (nb_keys + blockSize - 1) / blockSize;
+
+    // Project the keys
+    projectKeys<<<numBlocks, blockSize>>>(
+        this->device_scene, device_keys, device_sorted_indices,
+        device_internal_nodes, device_leaf_nodes
+    );
+    CUDA_KERNEL_LAUNCH_CHECK();
+    cudaDeviceSynchronize();
+
+    unsigned int *d_keys_in = device_keys;
+    unsigned int *d_values_in = device_sorted_indices;
+    unsigned int *d_keys_out;
+    unsigned int *d_values_out;
+    void *tmp_storage = nullptr;
+    size_t tmp_storage_bytes = 0;
+    cudaMallocManaged(&d_keys_out, nb_keys * sizeof(morton_t));
+    cudaMallocManaged(&d_values_out, nb_keys * sizeof(unsigned int));
+
     // Sort the keys
-    // No need for cudaMemcpy, because of managed memory
-    std::vector<morton_t> host_keys(device_keys, device_keys + nb_keys);
-    std::vector<size_t> sorted_indices = argsort(host_keys);
-    cudaMemcpy(device_sorted_indices, sorted_indices.data(), nb_keys * sizeof(unsigned int), cudaMemcpyHostToDevice);
+    printf ("Sorting the keys\n");
+    cub::DeviceRadixSort::SortPairs(
+        tmp_storage, tmp_storage_bytes,
+        d_keys_in, d_keys_out,  // Input keys and values (indices)
+        d_values_in, d_values_out,  // Output keys and values (sorted keys and indices)
+        nb_keys
+    );
+    cudaMalloc(&tmp_storage, tmp_storage_bytes);
 
-    // // Print the tree
-    // printTreeKernel<<<1, 1>>>(device_tree);
-    // err = cudaDeviceSynchronize();
-    // if (err != cudaSuccess) {
-    //     std::cerr << "Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
-    // }
+    cub::DeviceRadixSort::SortPairs(
+        tmp_storage, tmp_storage_bytes,
+        d_keys_in, d_keys_out,  // Input keys and values (indices)
+        d_values_in, d_values_out,  // Output keys and values (sorted keys and indices)
+        nb_keys
+    );
+    CUDA_KERNEL_LAUNCH_CHECK();
+    cudaDeviceSynchronize();
+
+    // print out the sorted indices
+    for (int i = 0; i < nb_keys; i++) {
+        device_sorted_indices[i] = d_values_out[i];
+        device_keys[i] = d_keys_out[i];
+    }
+
+
+    cudaFree(tmp_storage);
+    cudaFree(d_keys_out);
+    cudaFree(d_values_out);
+    cudaDeviceSynchronize();
+
+    // Initialize the tree structure
+    printf ("Initializing the tree structure\n");
+    new (device_tree) BVHTree (
+        nb_keys, device_keys, device_sorted_indices,
+        device_internal_nodes, device_leaf_nodes,
+        device_bbMinScene, device_bbMaxScene
+    );
 
     // Update the parents
+    printf ("Growing the tree\n");
     growTreeKernel<<<numBlocks, blockSize>>>(device_tree);
+    cudaDeviceSynchronize();
+    CUDA_KERNEL_LAUNCH_CHECK();
 
-    err = cudaDeviceSynchronize();
-    if (err != cudaSuccess) {
-        std::cerr << "Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
+    // Initialize the ray tracer
+    printf ("Initializing the ray tracer\n");
+    new (device_ray_tracer) RayTracer(device_tree, device_vertices, 3 * nb_keys);
+
+    printf ("Acceleration structure setup complete\n");
+}
+
+SceneManager::~SceneManager() {
+    cudaCheckError (cudaFree(device_keys));
+    cudaCheckError (cudaFree(device_sorted_indices));
+
+    cudaCheckError (cudaFree(device_internal_nodes.bbMin));
+    cudaCheckError (cudaFree(device_internal_nodes.bbMax));
+    cudaCheckError (cudaFree(device_internal_nodes.rope));
+    cudaCheckError (cudaFree(device_internal_nodes.left_child));
+    cudaCheckError (cudaFree(device_internal_nodes.entered));
+
+    cudaCheckError (cudaFree(device_leaf_nodes.bbMin));
+    cudaCheckError (cudaFree(device_leaf_nodes.bbMax));
+    cudaCheckError (cudaFree(device_leaf_nodes.rope));
+
+    cudaCheckError (cudaFree(device_tree));
+    cudaCheckError (cudaFree(device_ray_tracer));
+}
+
+void SceneManager::getTreeStructure () {
+    // Print the sorted indices
+    for (int i = 0; i < nb_keys; i++) {
+        printf("sorted_indices[%d] = %d\n", i, device_sorted_indices[i]);
     }
-
-    // // Print the device nodes
-    // for (int i = 0; i < nb_keys - 1; i++) {
-    //     printf("Internal node %d\n", i);
-    //     printf("bbMin = (%f, %f, %f, %f)\n", device_internal_nodes.bbMin[i].x, device_internal_nodes.bbMin[i].y, device_internal_nodes.bbMin[i].z, device_internal_nodes.bbMin[i].w);
-    //     printf("bbMax = (%f, %f, %f, %f)\n", device_internal_nodes.bbMax[i].x, device_internal_nodes.bbMax[i].y, device_internal_nodes.bbMax[i].z, device_internal_nodes.bbMax[i].w);
-    //     printf("rope = %d\n", device_internal_nodes.rope[i]);
-    //     printf("left_child = %d\n", device_internal_nodes.left_child[i]);
-    // }
-
-    // Print the tree
-    // printTreeKernel<<<1, 1>>>(device_tree);
+    // Print the keys
+    for (int i = 0; i < nb_keys; i++) {
+        printf("Key sorted %d = %d\n", i, device_keys[i]);
+    }
+    // print the internal nodes left child and rope
+    printf ("left_child = [");
+    for (int i = 0; i < nb_keys; i++) {
+        printf("%d, ", device_internal_nodes.left_child[i]);
+    }
+    printf("]\n");
+    printf ("rope_internal = [");
+    for (int i = 0; i < nb_keys; i++) {
+        printf("%d, ", device_internal_nodes.rope[i]);
+    }
+    printf("]\n");
+    // print the leaf nodes rope
+    printf ("rope_leaf = [");
+    for (int i = 0; i < nb_keys; i++) {
+        printf("%d, ", device_leaf_nodes.rope[i]);
+    }
+    printf("]\n");
+    // Print the bbmin and bbmax of internal nodes
+    printf ("bbMin_internal = [");
+    for (int i = 0; i < nb_keys - 1; i++) {
+        printf("(%f, %f, %f, %f), ", device_internal_nodes.bbMin[i].x, device_internal_nodes.bbMin[i].y, device_internal_nodes.bbMin[i].z, device_internal_nodes.bbMin[i].w);
+    }
+    printf("]\n");
+    printf ("bbMax_internal = [");
+    for (int i = 0; i < nb_keys - 1; i++) {
+        printf("(%f, %f, %f, %f), ", device_internal_nodes.bbMax[i].x, device_internal_nodes.bbMax[i].y, device_internal_nodes.bbMax[i].z, device_internal_nodes.bbMax[i].w);
+    }
+    printf("]\n");
+    // Print the bbmin and bbmax of leaf nodes
+    printf ("bbMin_leaf = [");
+    for (int i = 0; i < nb_keys; i++) {
+        printf("(%f, %f, %f, %f), ", device_leaf_nodes.bbMin[i].x, device_leaf_nodes.bbMin[i].y, device_leaf_nodes.bbMin[i].z, device_leaf_nodes.bbMin[i].w);
+    }
+    printf("]\n");
+    printf ("bbMax_leaf = [");
+    for (int i = 0; i < nb_keys; i++) {
+        printf("(%f, %f, %f, %f), ", device_leaf_nodes.bbMax[i].x, device_leaf_nodes.bbMax[i].y, device_leaf_nodes.bbMax[i].z, device_leaf_nodes.bbMax[i].w);
+    }
+    printf("]\n");
 }
 
 float* SceneManager::projectPlaneRays (
     uint2 &N, float2 &D, float4 &spherical, float4 &euler, float4 &meshOrigin) {
-    int blockSize = 256;
-    int numBlocks = (nb_keys + blockSize - 1) / blockSize;
+    // 2D grid
+    dim3 blockSize(16, 16);
+    dim3 numBlocks((N.x + blockSize.x - 1) / blockSize.x, (N.y + blockSize.y - 1) / blockSize.y);
 
     // printf ("nb_keys = %d\n", nb_keys);
     float* host_image = new float[N.x * N.y];
     float* device_image;
     cudaMallocManaged(&device_image, N.x * N.y * sizeof(float));
 
+    // Print spherical and euler
+    // printf ("spherical = (%f, %f, %f, %f)\n", spherical.x, spherical.y, spherical.z, spherical.w);
+    // printf ("euler = (%f, %f, %f, %f)\n", euler.x, euler.y, euler.z, euler.w);
+
+    // Project the rays
+    printf ("Projecting the rays\n");
     projectPlaneRaysKernel<<<numBlocks, blockSize>>>(
         device_ray_tracer, device_image, N, D, spherical, euler, meshOrigin);
-
-    cudaError_t err = cudaDeviceSynchronize();
-
-    if (err != cudaSuccess) {
-        std::cerr << "Kernel launch failed: " << cudaGetErrorString(err) << std::endl;
-    }
+    cudaDeviceSynchronize();
+    CUDA_KERNEL_LAUNCH_CHECK();
 
     // Copy the image to the host
-    cudaMemcpy(host_image, device_image, N.x * N.y * sizeof(float), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < N.x * N.y; i++) {
+        host_image[i] = device_image[i];
+    }
 
     cudaFree(device_image);
 
@@ -302,7 +412,7 @@ CollisionList SceneManager::getCollisionList (unsigned int index) {
     CollisionList *device_candidates;
     cudaMallocManaged(&device_candidates, sizeof(CollisionList));
     device_candidates->count = 0;
-    for (int i=0; i < nb_keys; i++) {
+    for (int i=0; i < MAX_COLLISIONS; i++) {
         device_candidates->collisions[i] = 0;
     }
 
@@ -315,7 +425,7 @@ CollisionList SceneManager::getCollisionList (unsigned int index) {
 
     // Copy the collision list to the host
     CollisionList host_candidates;
-    for (int i = 0; i < nb_keys; i++) {
+    for (int i = 0; i < device_candidates->count; i++) {
         host_candidates.collisions[i] = device_candidates->collisions[i];
     }
     host_candidates.count = device_candidates->count;
@@ -323,4 +433,26 @@ CollisionList SceneManager::getCollisionList (unsigned int index) {
     cudaFree(device_candidates);
 
     return host_candidates;
+}
+
+bool SceneManager::sanityCheck () {
+    int id = 0;
+    bool ret = device_tree->sanityCheck(id);
+
+    if (ret) {
+        return true;
+    }
+
+    if (0 <= id && id < nb_keys) {
+        // print the vertices of the returned node
+        float4 V1 = device_vertices[id * 3];
+        float4 V2 = device_vertices[id * 3 + 1];
+        float4 V3 = device_vertices[id * 3 + 2];
+        
+        printf("V1 = (%f, %f, %f, %f)\n", V1.x, V1.y, V1.z, V1.w);
+        printf("V2 = (%f, %f, %f, %f)\n", V2.x, V2.y, V2.z, V2.w);
+        printf("V3 = (%f, %f, %f, %f)\n", V3.x, V3.y, V3.z, V3.w);
+    }
+
+    return false;
 }

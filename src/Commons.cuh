@@ -3,12 +3,18 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <iostream>
+#include <cmath>
 
-#define MAX_COLLISIONS 128
+#define MAX_COLLISIONS 256
 #define EPSILON 0.00001
 
 typedef struct {
     int collisions[MAX_COLLISIONS];
+    int count;
+} CandidateList;
+
+typedef struct {
+    float collisions[MAX_COLLISIONS];
     int count;
 } CollisionList;
 
@@ -69,6 +75,14 @@ inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort 
     }
 }
 
+#define CUDA_KERNEL_LAUNCH_CHECK()                                                                                     \
+  do {                                                                                                                 \
+    const auto cuda_err = cudaGetLastError();                                                                          \
+    if (cuda_err != cudaSuccess) {                                                                                     \
+      throw std::runtime_error(std::string("CUDA kernel launch failed! ") + cudaGetErrorString(cuda_err));             \
+    }                                                                                                                  \
+  } while (0)
+
 __host__ __device__ inline float xor_signmask(float x, int y)
 {
     return (float)(int(x) ^ y);
@@ -80,7 +94,7 @@ __host__ __device__ inline float4 sub4(float4 a, float4 b)
     c.x = a.x - b.x;
     c.y = a.y - b.y;
     c.z = a.z - b.z;
-    c.w = a.w - b.w;
+    c.w = 0;
     return c;
 }
 
@@ -119,8 +133,7 @@ __host__ __device__ inline float4 cross4 (float4 a, float4 b) // cross product b
     float4 c;
     c.x = a.y * b.z - a.z * b.y;
     c.y = a.z * b.x - a.x * b.z;
-    c.z = a.x * b.y - a.y - b.x;
-    c.w = 0;
+    c.z = a.x * b.y - a.y * b.x;
 
     return c;
 }
@@ -531,19 +544,84 @@ __forceinline__ __host__ __device__ unsigned int expandBits(unsigned int value)
 /// <param name="point"> The point. </param>
 ///
 /// <returns> The calculated morton code. </returns>
+// __forceinline__ __host__ __device__ unsigned int calculateMortonCode(float4 point)
+// {
+//     // Discretize the unit cube into a 10 bit integer
+//     uint3 discretized;
+//     discretized.x = (unsigned int)min(max(point.x * 1024.0f, 0.0f), 1023.0f);
+//     discretized.y = (unsigned int)min(max(point.y * 1024.0f, 0.0f), 1023.0f);
+//     discretized.z = (unsigned int)min(max(point.z * 1024.0f, 0.0f), 1023.0f);
+
+//     discretized.x = expandBits(discretized.x);
+//     discretized.y = expandBits(discretized.y);
+//     discretized.z = expandBits(discretized.z);
+
+//     return discretized.x * 4 + discretized.y * 2 + discretized.z;
+// }
+
+template <int N>
+__forceinline__ __host__ __device__ unsigned int expandBitsBy (unsigned int)
+{
+    static_assert(0 <= N && N < 10,
+                "expandBitsBy can only be used with values 0-9");
+
+    return 0; 
+}
+
+template <>
+__forceinline__ __host__ __device__ unsigned int expandBitsBy<0> (unsigned int x)
+{
+    return x;
+}
+
+template <>
+__forceinline__ __host__ __device__ unsigned int expandBitsBy<1> (unsigned int x)
+{
+    x &= 0x0000ffffu;
+    x = (x ^ (x << 8)) & 0x00ff00ffu;
+    x = (x ^ (x << 4)) & 0x0f0f0f0fu;
+    x = (x ^ (x << 2)) & 0x33333333u;
+    x = (x ^ (x << 1)) & 0x55555555u;
+    return x;
+}
+
+template <>
+__forceinline__ __host__ __device__ unsigned int expandBitsBy<2> (unsigned int x)
+{
+    x &= 0x000003ffu;
+    x = (x ^ (x << 16)) & 0xff0000ffu;
+    x = (x ^ (x << 8)) & 0x0300f00fu;
+    x = (x ^ (x << 4)) & 0x030c30c3u;
+    x = (x ^ (x << 2)) & 0x09249249u;
+    return x;
+}
+
+template <>
+__forceinline__ __host__ __device__ unsigned int expandBitsBy<3> (unsigned int x)
+{
+    x &= 0xffu;
+    x = (x | x << 16) & 0xc0003fu;
+    x = (x | x << 8) & 0xc03807u;
+    x = (x | x << 4) & 0x8430843u;
+    x = (x | x << 2) & 0x9090909u;
+    x = (x | x << 1) & 0x11111111u;
+    return x;
+}
+
 __forceinline__ __host__ __device__ unsigned int calculateMortonCode(float4 point)
 {
     // Discretize the unit cube into a 10 bit integer
-    uint3 discretized;
-    discretized.x = (unsigned int)min(max(point.x * 1024.0f, 0.0f), 1023.0f);
-    discretized.y = (unsigned int)min(max(point.y * 1024.0f, 0.0f), 1023.0f);
-    discretized.z = (unsigned int)min(max(point.z * 1024.0f, 0.0f), 1023.0f);
+    constexpr unsigned N = 1u << 10;
 
-    discretized.x = expandBits(discretized.x);
-    discretized.y = expandBits(discretized.y);
-    discretized.z = expandBits(discretized.z);
+    float p[3] = {point.x, point.y, point.z};
 
-    return discretized.x * 4 + discretized.y * 2 + discretized.z;
+    unsigned r = 0;
+    for (int d = 0; d < 3; ++d)
+    {
+        auto x = min (max (p[d] * N, 0.0f), (float)(N - 1));
+        r += (expandBitsBy<2>((unsigned int)x) << (3 - d - 1));
+    }
+    return r;
 }
 
 /// <summary> Compact bits from the specified 30-bit value, using only one bit at every 3 from the

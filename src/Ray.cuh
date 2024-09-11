@@ -13,8 +13,10 @@ public:
     __host__ __device__ void updateInvDirection();
     __host__ __device__ void updateSign();
     __host__ __device__ float4 computeParametric(float t);
-    __host__ __device__ bool intersects (float4 min, float4 max, float2 &t); // AABB
-    __host__ __device__ bool intersects (float4 &V1, float4 &V2, float4 &V3, float &t); // Triangle
+    __host__ __device__ bool intersects (float4 const &minBbox, float4 const &maxBbox, float &tmin, float &tmax); // AABB
+    __host__ __device__ bool intersects (float4 const &minBbox, float4 const &maxBbox); // AABB
+    __host__ __device__ bool intersects (float4 const &V1, float4 const &V2, float4 const &V3, float &tmin, float &tmax); // Triangle
+    __host__ __device__ bool intersects (float4 const &V1, float4 const &V2, float4 const &V3, float &t); // Triangle
 
     // setters
     __host__ __device__ void setTail(float4 &T);

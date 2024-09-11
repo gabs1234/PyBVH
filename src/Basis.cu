@@ -44,19 +44,23 @@ __host__ __device__ void Basis::rotate (float2 &spherical) {
 
 __host__ __device__ void Basis::rotate (float4 &euler) {
     // yaw
-    RotationQuaternion rot_yaw(euler.x, this->u2);
-    this->u1 = rot_yaw.rotate(this->u1);
-    this->u3 = rot_yaw.rotate(this->u3);
-    
+    if (euler.x != 0) {
+        RotationQuaternion rot_yaw(euler.x, this->u2);
+        this->u1 = rot_yaw.rotate(this->u1);
+        this->u3 = rot_yaw.rotate(this->u3);
+    }    
     // pitch
-    RotationQuaternion rot_pitch(euler.y, this->u1);
-    this->u2 = rot_pitch.rotate(this->u2);
-    this->u3 = rot_pitch.rotate(this->u3);
-
+    if (euler.y != 0) {
+        RotationQuaternion rot_pitch(euler.y, this->u1);
+        this->u2 = rot_pitch.rotate(this->u2);
+        this->u3 = rot_pitch.rotate(this->u3);
+    }
     // roll
-    RotationQuaternion rot_roll(euler.z, this->u3);
-    this->u1 = rot_roll.rotate(this->u1);
-    this->u2 = rot_roll.rotate(this->u2);
+    if (euler.z != 0) {
+        RotationQuaternion rot_roll(euler.z, this->u3);
+        this->u1 = rot_roll.rotate(this->u1);
+        this->u2 = rot_roll.rotate(this->u2);
+    }
 }
 
 __host__ __device__ void Basis::scale (float s1, float s2, float s3) {

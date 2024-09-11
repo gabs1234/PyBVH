@@ -69,26 +69,11 @@ include CMakeFiles/UnitTestBVH.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/UnitTestBVH.dir/flags.make
 
-CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: CMakeFiles/UnitTestBVH.dir/flags.make
-CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
-CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: /home/lt0649/Dev/PyBVH/src/test/test_mesh_bvh.cu
-CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CUDA object CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o"
-	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o -MF CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/test/test_mesh_bvh.cu -o CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o
-
-CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.i"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
-
-CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.s"
-	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
-
 CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o: CMakeFiles/UnitTestBVH.dir/flags.make
 CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o: /home/lt0649/Dev/PyBVH/src/Quaternion.cu
 CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CUDA object CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CUDA object CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o -MF CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/Quaternion.cu -o CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o
 
 CMakeFiles/UnitTestBVH.dir/Quaternion.cu.i: cmake_force
@@ -103,7 +88,7 @@ CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o: CMakeFiles/UnitTestBVH.dir/f
 CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o: /home/lt0649/Dev/PyBVH/src/RotationQuaternion.cu
 CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CUDA object CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CUDA object CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o -MF CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/RotationQuaternion.cu -o CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o
 
 CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.i: cmake_force
@@ -118,7 +103,7 @@ CMakeFiles/UnitTestBVH.dir/Basis.cu.o: CMakeFiles/UnitTestBVH.dir/flags.make
 CMakeFiles/UnitTestBVH.dir/Basis.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/Basis.cu.o: /home/lt0649/Dev/PyBVH/src/Basis.cu
 CMakeFiles/UnitTestBVH.dir/Basis.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CUDA object CMakeFiles/UnitTestBVH.dir/Basis.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CUDA object CMakeFiles/UnitTestBVH.dir/Basis.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/Basis.cu.o -MF CMakeFiles/UnitTestBVH.dir/Basis.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/Basis.cu -o CMakeFiles/UnitTestBVH.dir/Basis.cu.o
 
 CMakeFiles/UnitTestBVH.dir/Basis.cu.i: cmake_force
@@ -133,7 +118,7 @@ CMakeFiles/UnitTestBVH.dir/Ray.cu.o: CMakeFiles/UnitTestBVH.dir/flags.make
 CMakeFiles/UnitTestBVH.dir/Ray.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/Ray.cu.o: /home/lt0649/Dev/PyBVH/src/Ray.cu
 CMakeFiles/UnitTestBVH.dir/Ray.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CUDA object CMakeFiles/UnitTestBVH.dir/Ray.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CUDA object CMakeFiles/UnitTestBVH.dir/Ray.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/Ray.cu.o -MF CMakeFiles/UnitTestBVH.dir/Ray.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/Ray.cu -o CMakeFiles/UnitTestBVH.dir/Ray.cu.o
 
 CMakeFiles/UnitTestBVH.dir/Ray.cu.i: cmake_force
@@ -148,7 +133,7 @@ CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o: CMakeFiles/UnitTestBVH.dir/flag
 CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o: /home/lt0649/Dev/PyBVH/src/tree_prokopenko.cu
 CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CUDA object CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o -MF CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/tree_prokopenko.cu -o CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o
 
 CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.i: cmake_force
@@ -163,7 +148,7 @@ CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o: CMakeFiles/UnitTestBVH.dir/flags.make
 CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o: /home/lt0649/Dev/PyBVH/src/RayTracer.cu
 CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CUDA object CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CUDA object CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o -MF CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/RayTracer.cu -o CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o
 
 CMakeFiles/UnitTestBVH.dir/RayTracer.cu.i: cmake_force
@@ -178,7 +163,7 @@ CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o: CMakeFiles/UnitTestBVH.dir/flags.m
 CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o: /home/lt0649/Dev/PyBVH/src/SceneManager.cu
 CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CUDA object CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CUDA object CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o"
 	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o -MF CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/SceneManager.cu -o CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o
 
 CMakeFiles/UnitTestBVH.dir/SceneManager.cu.i: cmake_force
@@ -189,21 +174,35 @@ CMakeFiles/UnitTestBVH.dir/SceneManager.cu.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/UnitTestBVH.dir/SceneManager.cu.s"
 	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
 
+CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: CMakeFiles/UnitTestBVH.dir/flags.make
+CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
+CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: /home/lt0649/Dev/PyBVH/src/test/test_mesh_bvh.cu
+CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o: CMakeFiles/UnitTestBVH.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CUDA object CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o"
+	/usr/local/cuda-12.6/bin/nvcc -forward-unknown-to-host-compiler $(CUDA_DEFINES) $(CUDA_INCLUDES) $(CUDA_FLAGS) -MD -MT CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o -MF CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o.d -x cu -rdc=true -c /home/lt0649/Dev/PyBVH/src/test/test_mesh_bvh.cu -o CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o
+
+CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CUDA source to CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.i"
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_PREPROCESSED_SOURCE
+
+CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CUDA source to assembly CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.s"
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CUDA_CREATE_ASSEMBLY_SOURCE
+
 # Object files for target UnitTestBVH
 UnitTestBVH_OBJECTS = \
-"CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/Basis.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/Ray.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o" \
-"CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o"
+"CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o" \
+"CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o"
 
 # External object files for target UnitTestBVH
 UnitTestBVH_EXTERNAL_OBJECTS =
 
-CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/Basis.cu.o
@@ -211,6 +210,7 @@ CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/Ray.c
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/build.make
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_stitching.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_alphamat.so.4.6.0
@@ -248,12 +248,19 @@ CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libope
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_wechat_qrcode.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_xobjdetect.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_xphoto.so.4.6.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkInteractionStyle-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingContextOpenGL2-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingGL2PSOpenGL2-9.1.so.9.1.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_datasets.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_plot.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_text.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_ml.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_phase_unwrapping.so.4.6.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkIOGeometry-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkIOLegacy-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libjsoncpp.so
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkIOCore-9.1.so.9.1.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_optflow.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_ximgproc.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_video.so.4.6.0
@@ -267,6 +274,26 @@ CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libope
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.6.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.6.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingContext2D-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingFreeType-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libfreetype.so
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingOpenGL2-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingUI-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonColor-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkFiltersGeneral-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkFiltersCore-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonExecutionModel-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libGLEW.so
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libX11.so
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonDataModel-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonTransforms-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonMisc-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonMath-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkCommonCore-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtksys-9.1.so.9.1.0
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libtbb.so.12.11
+CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: /usr/lib/x86_64-linux-gnu/libvtkkissfft-9.1.so.9.1.0
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/deviceLinkLibs.rsp
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/deviceObjects1.rsp
 CMakeFiles/UnitTestBVH.dir/cmake_device_link.o: CMakeFiles/UnitTestBVH.dir/dlink.txt
@@ -279,19 +306,18 @@ CMakeFiles/UnitTestBVH.dir/build: CMakeFiles/UnitTestBVH.dir/cmake_device_link.o
 
 # Object files for target UnitTestBVH
 UnitTestBVH_OBJECTS = \
-"CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/Basis.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/Ray.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o" \
 "CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o" \
-"CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o"
+"CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o" \
+"CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o"
 
 # External object files for target UnitTestBVH
 UnitTestBVH_EXTERNAL_OBJECTS =
 
-UnitTestBVH: CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/Basis.cu.o
@@ -299,6 +325,7 @@ UnitTestBVH: CMakeFiles/UnitTestBVH.dir/Ray.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o
+UnitTestBVH: CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/build.make
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_stitching.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_alphamat.so.4.6.0
@@ -336,12 +363,19 @@ UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_viz.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_wechat_qrcode.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_xobjdetect.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_xphoto.so.4.6.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkInteractionStyle-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingContextOpenGL2-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingGL2PSOpenGL2-9.1.so.9.1.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_highgui.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_datasets.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_plot.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_text.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_ml.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_phase_unwrapping.so.4.6.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkIOGeometry-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkIOLegacy-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libjsoncpp.so
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkIOCore-9.1.so.9.1.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_optflow.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_ximgproc.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_video.so.4.6.0
@@ -355,6 +389,26 @@ UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_flann.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.6.0
 UnitTestBVH: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.6.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingContext2D-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingFreeType-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libfreetype.so
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingOpenGL2-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingUI-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkRenderingCore-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonColor-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkFiltersGeneral-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkFiltersCore-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonExecutionModel-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libGLEW.so
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libX11.so
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonDataModel-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonTransforms-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonMisc-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonMath-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkCommonCore-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtksys-9.1.so.9.1.0
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libtbb.so.12.11
+UnitTestBVH: /usr/lib/x86_64-linux-gnu/libvtkkissfft-9.1.so.9.1.0
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/cmake_device_link.o
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/linkLibs.rsp
 UnitTestBVH: CMakeFiles/UnitTestBVH.dir/objects1.rsp

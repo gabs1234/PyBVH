@@ -63,6 +63,7 @@ CMAKE_BINARY_DIR = /home/lt0649/Dev/PyBVH/src/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
+all: CMakeFiles/UnitTestRay.dir/all
 all: CMakeFiles/UnitTestBVH.dir/all
 .PHONY : all
 
@@ -71,8 +72,35 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
+clean: CMakeFiles/UnitTestRay.dir/clean
 clean: CMakeFiles/UnitTestBVH.dir/clean
 .PHONY : clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/UnitTestRay.dir
+
+# All Build rule for target.
+CMakeFiles/UnitTestRay.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/lt0649/Dev/PyBVH/src/build/CMakeFiles --progress-num=11,12,13,14,15,16,17,18,19,20 "Built target UnitTestRay"
+.PHONY : CMakeFiles/UnitTestRay.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/UnitTestRay.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lt0649/Dev/PyBVH/src/build/CMakeFiles 10
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/UnitTestRay.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/lt0649/Dev/PyBVH/src/build/CMakeFiles 0
+.PHONY : CMakeFiles/UnitTestRay.dir/rule
+
+# Convenience name for target.
+UnitTestRay: CMakeFiles/UnitTestRay.dir/rule
+.PHONY : UnitTestRay
+
+# clean rule for target.
+CMakeFiles/UnitTestRay.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/clean
+.PHONY : CMakeFiles/UnitTestRay.dir/clean
 
 #=============================================================================
 # Target rules for target CMakeFiles/UnitTestBVH.dir

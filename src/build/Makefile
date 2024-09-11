@@ -117,6 +117,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named UnitTestRay
+
+# Build rule for target.
+UnitTestRay: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 UnitTestRay
+.PHONY : UnitTestRay
+
+# fast build rule for target.
+UnitTestRay/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/build
+.PHONY : UnitTestRay/fast
+
+#=============================================================================
 # Target rules for targets named UnitTestBVH
 
 # Build rule for target.
@@ -134,6 +147,7 @@ Basis.o: Basis.cu.o
 
 # target to build an object file
 Basis.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Basis.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Basis.cu.o
 .PHONY : Basis.cu.o
 
@@ -142,6 +156,7 @@ Basis.i: Basis.cu.i
 
 # target to preprocess a source file
 Basis.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Basis.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Basis.cu.i
 .PHONY : Basis.cu.i
 
@@ -150,6 +165,7 @@ Basis.s: Basis.cu.s
 
 # target to generate assembly for a file
 Basis.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Basis.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Basis.cu.s
 .PHONY : Basis.cu.s
 
@@ -158,6 +174,7 @@ Quaternion.o: Quaternion.cu.o
 
 # target to build an object file
 Quaternion.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Quaternion.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Quaternion.cu.o
 .PHONY : Quaternion.cu.o
 
@@ -166,6 +183,7 @@ Quaternion.i: Quaternion.cu.i
 
 # target to preprocess a source file
 Quaternion.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Quaternion.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Quaternion.cu.i
 .PHONY : Quaternion.cu.i
 
@@ -174,6 +192,7 @@ Quaternion.s: Quaternion.cu.s
 
 # target to generate assembly for a file
 Quaternion.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Quaternion.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Quaternion.cu.s
 .PHONY : Quaternion.cu.s
 
@@ -182,6 +201,7 @@ Ray.o: Ray.cu.o
 
 # target to build an object file
 Ray.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Ray.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Ray.cu.o
 .PHONY : Ray.cu.o
 
@@ -190,6 +210,7 @@ Ray.i: Ray.cu.i
 
 # target to preprocess a source file
 Ray.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Ray.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Ray.cu.i
 .PHONY : Ray.cu.i
 
@@ -198,6 +219,7 @@ Ray.s: Ray.cu.s
 
 # target to generate assembly for a file
 Ray.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/Ray.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/Ray.cu.s
 .PHONY : Ray.cu.s
 
@@ -206,6 +228,7 @@ RayTracer.o: RayTracer.cu.o
 
 # target to build an object file
 RayTracer.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/RayTracer.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/RayTracer.cu.o
 .PHONY : RayTracer.cu.o
 
@@ -214,6 +237,7 @@ RayTracer.i: RayTracer.cu.i
 
 # target to preprocess a source file
 RayTracer.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/RayTracer.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/RayTracer.cu.i
 .PHONY : RayTracer.cu.i
 
@@ -222,6 +246,7 @@ RayTracer.s: RayTracer.cu.s
 
 # target to generate assembly for a file
 RayTracer.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/RayTracer.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/RayTracer.cu.s
 .PHONY : RayTracer.cu.s
 
@@ -230,6 +255,7 @@ RotationQuaternion.o: RotationQuaternion.cu.o
 
 # target to build an object file
 RotationQuaternion.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/RotationQuaternion.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.o
 .PHONY : RotationQuaternion.cu.o
 
@@ -238,6 +264,7 @@ RotationQuaternion.i: RotationQuaternion.cu.i
 
 # target to preprocess a source file
 RotationQuaternion.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/RotationQuaternion.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.i
 .PHONY : RotationQuaternion.cu.i
 
@@ -246,6 +273,7 @@ RotationQuaternion.s: RotationQuaternion.cu.s
 
 # target to generate assembly for a file
 RotationQuaternion.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/RotationQuaternion.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/RotationQuaternion.cu.s
 .PHONY : RotationQuaternion.cu.s
 
@@ -254,6 +282,7 @@ SceneManager.o: SceneManager.cu.o
 
 # target to build an object file
 SceneManager.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/SceneManager.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/SceneManager.cu.o
 .PHONY : SceneManager.cu.o
 
@@ -262,6 +291,7 @@ SceneManager.i: SceneManager.cu.i
 
 # target to preprocess a source file
 SceneManager.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/SceneManager.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/SceneManager.cu.i
 .PHONY : SceneManager.cu.i
 
@@ -270,6 +300,7 @@ SceneManager.s: SceneManager.cu.s
 
 # target to generate assembly for a file
 SceneManager.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/SceneManager.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/SceneManager.cu.s
 .PHONY : SceneManager.cu.s
 
@@ -297,11 +328,36 @@ test/test_mesh_bvh.cu.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/test/test_mesh_bvh.cu.s
 .PHONY : test/test_mesh_bvh.cu.s
 
+test/test_ray_triangle.o: test/test_ray_triangle.cu.o
+.PHONY : test/test_ray_triangle.o
+
+# target to build an object file
+test/test_ray_triangle.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/test/test_ray_triangle.cu.o
+.PHONY : test/test_ray_triangle.cu.o
+
+test/test_ray_triangle.i: test/test_ray_triangle.cu.i
+.PHONY : test/test_ray_triangle.i
+
+# target to preprocess a source file
+test/test_ray_triangle.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/test/test_ray_triangle.cu.i
+.PHONY : test/test_ray_triangle.cu.i
+
+test/test_ray_triangle.s: test/test_ray_triangle.cu.s
+.PHONY : test/test_ray_triangle.s
+
+# target to generate assembly for a file
+test/test_ray_triangle.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/test/test_ray_triangle.cu.s
+.PHONY : test/test_ray_triangle.cu.s
+
 tree_prokopenko.o: tree_prokopenko.cu.o
 .PHONY : tree_prokopenko.o
 
 # target to build an object file
 tree_prokopenko.cu.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/tree_prokopenko.cu.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.o
 .PHONY : tree_prokopenko.cu.o
 
@@ -310,6 +366,7 @@ tree_prokopenko.i: tree_prokopenko.cu.i
 
 # target to preprocess a source file
 tree_prokopenko.cu.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/tree_prokopenko.cu.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.i
 .PHONY : tree_prokopenko.cu.i
 
@@ -318,6 +375,7 @@ tree_prokopenko.s: tree_prokopenko.cu.s
 
 # target to generate assembly for a file
 tree_prokopenko.cu.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestRay.dir/build.make CMakeFiles/UnitTestRay.dir/tree_prokopenko.cu.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/UnitTestBVH.dir/build.make CMakeFiles/UnitTestBVH.dir/tree_prokopenko.cu.s
 .PHONY : tree_prokopenko.cu.s
 
@@ -330,6 +388,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... UnitTestBVH"
+	@echo "... UnitTestRay"
 	@echo "... Basis.o"
 	@echo "... Basis.i"
 	@echo "... Basis.s"
@@ -351,6 +410,9 @@ help:
 	@echo "... test/test_mesh_bvh.o"
 	@echo "... test/test_mesh_bvh.i"
 	@echo "... test/test_mesh_bvh.s"
+	@echo "... test/test_ray_triangle.o"
+	@echo "... test/test_ray_triangle.i"
+	@echo "... test/test_ray_triangle.s"
 	@echo "... tree_prokopenko.o"
 	@echo "... tree_prokopenko.i"
 	@echo "... tree_prokopenko.s"

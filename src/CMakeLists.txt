@@ -1,23 +1,6 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(UnitTestBVH CUDA)
-
-# # This example uses the CMake Package Manager (CPM) to simplify fetching CCCL from GitHub
-# # For more information, see https://github.com/cpm-cmake/CPM.cmake
-# include(cmake/CPM.cmake)
-
-
-# # We define these as variables so they can be overriden in CI to pull from a PR instead of CCCL `main`
-# # In your project, these variables are unncessary and you can just use the values directly
-# set(CCCL_REPOSITORY "nvidia/cccl" CACHE STRING "GitHub repository to fetch CCCL from")
-# set(CCCL_TAG "main" CACHE STRING "Git tag/branch to fetch from CCCL repository")
-
-# # This will automatically clone CCCL from GitHub and make the exported cmake targets available
-# CPMAddPackage(
-#     NAME CCCL
-#     GITHUB_REPOSITORY ${CCCL_REPOSITORY}
-#     GIT_TAG ${CCCL_TAG}
-# )
+project(UnitTestBVH CUDA CXX C)
 
 # Default to building for the GPU on the current system
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
@@ -28,10 +11,23 @@ endif()
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+find_package(VTK COMPONENTS 
+  CommonColor
+  CommonCore
+  IOGeometry
+  InteractionStyle
+  RenderingContextOpenGL2
+  RenderingCore
+  RenderingFreeType
+  RenderingGL2PSOpenGL2
+  RenderingOpenGL2
+)
 
-# Add the main CUDA file and other CUDA source files
-set(CUDA_SOURCES
-    test/test_mesh_bvh.cu
+if (NOT VTK_FOUND)
+  message(FATAL_ERROR "ReadSTL: Unable to find the VTK build folder.")
+endif()
+
+set(RayTracerSources
     Quaternion.cu
     RotationQuaternion.cu
     Basis.cu
@@ -42,19 +38,33 @@ set(CUDA_SOURCES
 )
 
 # Add the executable
-add_executable(UnitTestBVH ${CUDA_SOURCES})
+add_executable(UnitTestRay ${RayTracerSources} test/test_ray_triangle.cu)
+add_executable(UnitTestBVH ${RayTracerSources} test/test_mesh_bvh.cu)
 
-# "Links" the CCCL Cmake target to the `UnitTestBVH` executable. This configures everything needed to use
-# CCCL headers, including setting up include paths, compiler flags, etc.
-# target_link_libraries(UnitTestBVH PRIVATE CCCL::CCCL)
+# vtk_module_autoinit is needed
+vtk_module_autoinit(
+  TARGETS UnitTestBVH
+  MODULES ${VTK_LIBRARIES}
+)
 
 # Specify target properties (optional)
 set_target_properties(UnitTestBVH PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
+    # CUDA_RESOLVE_DEVICE_SYMBOLS ON
     # CUDA_ARCHITECTURES "60;70;75;80"  # Adjust based on your GPU's architecture
 )
 
+# Specify target properties (optional)
+set_target_properties(UnitTestRay PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    # CUDA_ARCHITECTURES "60;70;75;80"  # Adjust based on your GPU's architecture
+)
+
+# Add Debug flag
+set(CMAKE_CXX_FLAGS_DEBUG "-g -DDEBUG")
+set(CMAKE_CUDA_FLAGS_DEBUG "-g -G")
+
+
 target_link_libraries(UnitTestBVH ${OpenCV_LIBS})
-# Link libraries if necessary (usually not needed for Thrust/CUB)
-# target_link_libraries(UnitTestBVH PRIVATE ${THRUST_LIBRARIES})
-# target_link_libraries(UnitTestBVH PRIVATE ${CUB_LIBRARIES})
+target_link_libraries(UnitTestBVH ${VTK_LIBRARIES})
