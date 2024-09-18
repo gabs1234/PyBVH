@@ -8,9 +8,9 @@
 
 #include "tree_prokopenko.cuh"
 #include "RayTracer.cuh"
+#include "Basis.cuh"
 #include "Commons.cuh"
 #include "Ray.cuh"
-
 
 typedef struct {
     unsigned int nb_keys;

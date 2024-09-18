@@ -130,17 +130,6 @@ __host__ __device__ float sumTvalues (CollisionList &t_values) {
     return thickness;
 }
 
-struct descending
-{
-    template <typename T>
-    __host__ __device__
-    bool operator()(const T& a, const T& b) const
-    {
-        return a > b;
-    }
-};
-
-
 __device__ float RayTracer::traceRayParallel(Ray &ray) {
     
 
@@ -180,7 +169,7 @@ __device__ float RayTracer::traceRayParallel(Ray &ray) {
 
 
     // Sort the t_values
-    thrust::sort(thrust::device, tvalues.collisions, tvalues.collisions + tvalues.count, descending());
+    thrust::sort(thrust::device, tvalues.collisions, tvalues.collisions + tvalues.count);
 
     // printf ("t_values count = %d\n", t_values.count);
     // for (int i = 0; i < t_values.count; i++) {
@@ -218,13 +207,12 @@ __host__ __device__ void RayTracer::testSingleRay(Ray ray, CollisionList *collis
         }
     }
 
-    thrust::sort(thrust::device, collisions->collisions, collisions->collisions + collisions->count, descending());
+    thrust::sort(thrust::device, collisions->collisions, collisions->collisions + collisions->count);
 }
 
 __global__ void projectPlaneRaysKernel (
-    RayTracer *tracer, float *image, 
-    uint2 N, float2 D,
-    float4 spherical, float4 euler, float4 meshOrigin) {
+    RayTracer *tracer, float *image, uint2 N, float2 D,
+    BasisNamespace::Basis projectionPlaneBasis) {
     int gid_x = blockIdx.x * blockDim.x + threadIdx.x;
     int gid_y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -236,40 +224,16 @@ __global__ void projectPlaneRaysKernel (
         return;
     }
 
-    BasisNamespace::Basis meshBasis = BasisNamespace::Basis(
-        meshOrigin,
-        make_float4(1, 0, 0, 0),
-        make_float4(0, 1, 0, 0),
-        make_float4(0, 0, 1, 0));
-
-    BasisNamespace::Basis projectionPlaneBasis = tracer->makeProjectionBasis(
-        meshBasis, spherical, euler);
-        
-    float delta_x = D.x / (N.x-1);
-    float delta_y = D.y / (N.y-1);
-    float Dx2 = D.x / 2;
-    float Dy2 = D.y / 2;
-
     for (int i = gid_x; i < N.x; i += blockDim.x * gridDim.x) {
         for (int j = gid_y; j < N.y; j += blockDim.y * gridDim.y) {
 
-            float x = -Dx2 + i * delta_x;
-            float y = -Dy2 + j * delta_y;
-
-            // printf ("x = %f, y = %f\n", x, y);
-
-            float4 point_local_basis = make_float4(x, y, 0, 0);
+            float4 point_local_basis = tracer->phi(i, j, D, N);
             float4 point_new_basis = projectionPlaneBasis.getPointInBasis(point_local_basis);
-
 
             float4 direction = projectionPlaneBasis.getVector(2);
             Ray ray = Ray(point_new_basis, direction);
 
-            // printf ("start, id = %d\n", j * N.x + i);/
-
             float thickness = tracer->traceRayParallel(ray);
-
-            // printf ("done, id = %d\n", j * N.x + i);/
 
             image[j * N.x + i] = thickness;
         }

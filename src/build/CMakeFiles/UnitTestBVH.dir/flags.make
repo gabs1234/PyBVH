@@ -6,5 +6,5 @@ CUDA_DEFINES = -Dkiss_fft_scalar=double -DvtkRenderingContext2D_AUTOINIT_INCLUDE
 
 CUDA_INCLUDES = --options-file CMakeFiles/UnitTestBVH.dir/includes_CUDA.rsp
 
-CUDA_FLAGS = -std=c++17 -arch=native
+CUDA_FLAGS = -std=c++17 "--generate-code=arch=compute_80,code=[compute_80,sm_80]"
 

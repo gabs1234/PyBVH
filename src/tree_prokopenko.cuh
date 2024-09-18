@@ -45,24 +45,24 @@ public:
     }
 
     __host__ __device__ unsigned toInternalRepresentation(unsigned index){
-        int val = index + this->nb_keys;
-        if (val >= this->nb_keys * 2) {
-            printf("Error! toInternalRepresentation: %d\n", val);
-        }
+        // int val = index + this->nb_keys;
+        // if (val >= this->nb_keys * 2) {
+        //     printf("Error! toInternalRepresentation: %d\n", val);
+        // }
         return index + this->nb_keys;
     };
 
     __host__ __device__ unsigned toOriginalRepresentation(unsigned index){
-        int val = index - this->nb_keys;
-        if (val < 0) {
-            printf("Error! toOriginalRepresentation: %d\n", val);
-        }
+        // int val = index - this->nb_keys;
+        // if (val < 0) {
+        //     printf("Error! toOriginalRepresentation: %d\n", val);
+        // }
         return index - this->nb_keys;
     }; 
 
     __host__ __device__ unsigned permuteIndex(unsigned index) {
         // printf("original_index(%d) = %d\n", index, sorted_indices[index]);
-        this->verifyIndex(index, "permuteIndex");
+        // this->verifyIndex(index, "permuteIndex");
         return sorted_indices[index]; 
     };
 
@@ -90,23 +90,23 @@ public:
     __host__ __device__ void setInternalNode(int parent, int left_child, int rope, float4 bbMin, float4 bbMax);
     __host__ __device__ void setLeafNode(int index, int rope);
     __host__ __device__ void setLeftChild(unsigned parent, int left_child) {
-        this->verifyIndex(parent, "setLeftChild");
+        // this->verifyIndex(parent, "setLeftChild");
         this->internal_nodes.left_child[parent] = left_child;
     };
     __host__ __device__ void setBBMinLeaf(unsigned const index, float4 const bbMin) {
-        this->verifyIndex(index, "setBBMinLeaf");
+        // this->verifyIndex(index, "setBBMinLeaf");
         leaf_nodes.bbMin[index] = bbMin;
     };
     __host__ __device__ void setBBMaxLeaf(unsigned const index, float4 const bbMax) {
-        this->verifyIndex(index, "setBBMaxLeaf");
+        // this->verifyIndex(index, "setBBMaxLeaf");
         leaf_nodes.bbMax[index] = bbMax;
     };
     __host__ __device__ void setBBMinInternal(unsigned const index, float4 const bbMin) {
-        this->verifyIndex(index, "setBBMinInternal");
+        // this->verifyIndex(index, "setBBMinInternal");
         internal_nodes.bbMin[index] = bbMin;
     };
     __host__ __device__ void setBBMaxInternal(unsigned const index, float4 const bbMax) {
-        this->verifyIndex(index, "setBBMaxInternal");
+        // this->verifyIndex(index, "setBBMaxInternal");
         internal_nodes.bbMax[index] = bbMax;
     };
 
@@ -116,30 +116,30 @@ public:
         return this->internal_nodes.left_child[index];
     }
     __host__ __device__ float4 getBBMaxLeaf(unsigned const index) {
-        this->verifyIndex(index, "getBBMaxLeaf");
+        // this->verifyIndex(index, "getBBMaxLeaf");
         return leaf_nodes.bbMax[index];
     };
     __host__ __device__ float4 getBBMinLeaf(unsigned const index) {
-        this->verifyIndex(index, "getBBMinLeaf");
+        // this->verifyIndex(index, "getBBMinLeaf");
         return leaf_nodes.bbMin[index];
     };
     __host__ __device__ float4 getBBMaxInternal(unsigned const index) {
         int val = index;
-        this->verifyIndex(val, "getBBMaxInternal");
+        // this->verifyIndex(val, "getBBMaxInternal");
         return internal_nodes.bbMax[index];
     };
     __host__ __device__ float4 getBBMinInternal(unsigned const index) {
         int val = index;
-        this->verifyIndex(val, "getBBMinInternal");
+        // this->verifyIndex(val, "getBBMinInternal");
         return internal_nodes.bbMin[index];
     };
     __host__ __device__ int getRopeLeaf(unsigned const index) {
-        this->verifyIndex(index, "getRopeLeaf");
+        // this->verifyIndex(index, "getRopeLeaf");
         return leaf_nodes.rope[index];
     };
     __host__ __device__ int getRopeInternal(unsigned const index) {
         int val = index;
-        this->verifyIndex(val, "getRopeInternal");
+        // this->verifyIndex(val, "getRopeInternal");
         return internal_nodes.rope[index];
     };
 
@@ -158,7 +158,7 @@ public:
     }
     __host__ bool sanityCheck(int &id);
     __host__ __device__ void verifyIndex(int index, const char caller_name[]) {
-        if ( index < 0 || index >= this->nb_keys) {
+        if ( index < 0 || index >= 2 * this->nb_keys) {
             printf("Caller: %s\n", caller_name);
             printf("Index out of bounds: %d\n", index);
         }

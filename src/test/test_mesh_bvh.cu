@@ -72,7 +72,7 @@ Scene extract_scene_from_polydata (vtkPolyData *polydata) {
         vtkSmartPointer<vtkCell> cell = polydata->GetCell(cellId);
 
         if ( cell->GetNumberOfPoints() != 3 ) {
-            std::cout << "Error: The cell does not have 3 points." << std::endl;
+            // std::cout << "Error: The cell does not have 3 points." << std::endl;
             break;
         }
 
@@ -136,7 +136,7 @@ Scene make_scene_from_stl (std::string filename, bool visualize) {
         renderWindowInteractor->Start();
     }
 
-    std::cout << "Read " << filename << std::endl;
+    // std::cout << "Read " << filename << std::endl;
 
     return extract_scene_from_polydata(reader->GetOutput());
 }
@@ -174,7 +174,7 @@ Scene make_scene_from_wavefront (std::string filename, bool visualize) {
         renderWindowInteractor->Start();
     }
 
-    std::cout << "Read " << filename << std::endl;
+    // std::cout << "Read " << filename << std::endl;
 
     return extract_scene_from_polydata(reader->GetOutput());
 }
@@ -220,7 +220,7 @@ Scene create_non_overlaping_triangles (unsigned int N, float3 D) {
 Scene create_simple_scene (unsigned int N, float3 D) {
     long unsigned int n_trig = N * (N + 1) / 2;
     long unsigned int n_vertices = n_trig * 3;
-    std::cout << "n vertices = " << n_vertices << std::endl;
+    // std::cout << "n vertices = " << n_vertices << std::endl;
     float4 *vertices = new float4[n_vertices];
     float4 *bbMinLeaf = new float4[n_trig];
     float4 *bbMaxLeaf = new float4[n_trig];
@@ -335,13 +335,13 @@ void free_scene (Scene scene) {
 
 bool project_mesh (std::string filename) {
     // Get the bbMin and bbMax of the scene, and the bbMins and bbMaxs of the leafs
-    std::cout << "Create the scene" << std::endl;
+    // std::cout << "Create the scene" << std::endl;
     Scene scene = make_scene_from_stl (filename, false);
 
     // Print all vertices
-    std::cout << "nb keys" << scene.nb_keys << std::endl;
+    // std::cout << "nb keys" << scene.nb_keys << std::endl;
     // Manage the device
-    SceneManager manager(scene.vertices, scene.nb_keys, scene.bbMinScene, scene.bbMaxScene);
+    SceneManager manager(scene);
     manager.setupAccelerationStructure();
 
     // manager.getTreeStructure();
@@ -372,7 +372,7 @@ bool project_mesh (std::string filename) {
     cv::imwrite(output, img);
 
     // Free the scene
-    std::cout << "Free the scene" << std::endl;
+    // std::cout << "Free the scene" << std::endl;
     free_scene(scene);
 
     return true;
@@ -381,16 +381,16 @@ bool project_mesh (std::string filename) {
 
 void test_intersection (unsigned int N) {
     float3 extents = make_float3(1, 1, 1);
-    std::cout << "Create the scene" << std::endl;
+    // std::cout << "Create the scene" << std::endl;
     Scene scene = create_simple_scene (N, extents);
 
     // Print all vertices
-    std::cout << "nb keys" << scene.nb_keys << std::endl;
+    // std::cout << "nb keys" << scene.nb_keys << std::endl;
     // for (int i = 0; i < scene.nb_keys; i++) {
-    //     std::cout << "Triangle " << i << std::endl;
+        // std::cout << "Triangle " << i << std::endl;
     //     for (int j = 0; j < 3; j++) {
     //         float4 v = scene.vertices[i * 3 + j];
-    //         std::cout << "V" << j << " = (" << v.x << ", " << v.y << ", " << v.z << ")" << std::endl;
+            // std::cout << "V" << j << " = (" << v.x << ", " << v.y << ", " << v.z << ")" << std::endl;
     //     }
     // }
 
@@ -408,16 +408,16 @@ void test_intersection (unsigned int N) {
         CollisionList collisions = manager.getCollisionList(actual_id);
 
         if (collisions.count == 0) {
-            std::cout << "No collision" << std::endl;
+            // std::cout << "No collision" << std::endl;
         }
         else {
             if (collisions.count != i + 1) {
-                std::cout << red << "Error: expected " << i + 1 << " collisions, got " << collisions.count << green << std::endl;
+                // std::cout << red << "Error: expected " << i + 1 << " collisions, got " << collisions.count << green << std::endl;
             }
             else {
-                cout << "Collision " << i << std::endl;
+                // cout << "Collision " << i << std::endl;
                 for (int j = 0; j < collisions.count; j++) {
-                    std::cout << "Collision " << j << " = " << collisions.collisions[j] << std::endl;
+                    // std::cout << "Collision " << j << " = " << collisions.collisions[j] << std::endl;
                 }
             }
             
@@ -431,28 +431,28 @@ void project_random_scene (unsigned int N, float3 D) {
     Scene scene = create_random_scene (N, D);
 
     // Print all vertices
-    std::cout << "nb keys" << scene.nb_keys << std::endl;
+    // std::cout << "nb keys" << scene.nb_keys << std::endl;
 
     // Manage the device
     SceneManager manager(scene);
     manager.setupAccelerationStructure();
 
-    manager.getTreeStructure();
+    // manager.getTreeStructure();
 
-    if (!manager.sanityCheck()) {
-        std::cout << red << "Error: sanity check failed" << std::endl;
-        return;
-    }
-    else {
-        std::cout << def << "Sanity check passed" << std::endl;
-    }
+    // if (!manager.sanityCheck()) {
+        // std::cout << red << "Error: sanity check failed" << std::endl;
+    //     return;
+    // }
+    // else {
+        // std::cout << def << "Sanity check passed" << std::endl;
+    // }
 
     float2 viewport = make_float2(D.x,D.y);
     int mulx = viewport.x;
     int muly = viewport.y;
     uint2 n = make_uint2(mulx, muly);
     // float pi = M_PI;
-    float4 spherical = make_float4(0, 0, 10, 0);
+    float4 spherical = make_float4(0, 0, 100, 0);
     float4 euler = make_float4(0, 0, 0, 0); // yaw, pitch, roll
     float4 meshOrigin = make_float4(0, 0, 0, 0);
 
@@ -469,14 +469,14 @@ void project_random_scene (unsigned int N, float3 D) {
     cv::imwrite(output, img);
 
     // Free the scene
-    std::cout << "Free the scene" << std::endl;
+    // std::cout << "Free the scene" << std::endl;
     free_scene(scene);
 }
 
 int main(int argc, char **argv) {
     // Input N and D
     if (argc != 5) {
-        std::cout << "Usage: test_mesh_bvh N Dx Dy Dz" << std::endl;
+        // std::cout << "Usage: test_mesh_bvh N Dx Dy Dz" << std::endl;
         return 1;
     }
 
@@ -501,16 +501,16 @@ int main(int argc, char **argv) {
     // };
     // for (int i = 0; i < 10; i++) {
     //     std::string filename = filenames[i];
-    //     std::cout << "Projecting " << filename << std::endl;
+        // std::cout << "Projecting " << filename << std::endl;
     //     project_mesh(filename);
     // }
 
     // test_intersection (10);
 
-    project_random_scene(N, D);
+    // project_random_scene(N, D);
 
-    // // Big monkey
-    // project_mesh("../blender/big_monkey.stl");
+    // Big monkey
+    project_mesh("../blender/big_monkey.stl");
 
     return 0;
 }

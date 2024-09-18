@@ -153,7 +153,7 @@ __device__ void BVHTree::updateParents(int i) {
         if (delta_right < delta_left) {
             const int apetrei_parent = range_right;
 
-            range_right = atomicCAS (&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_left);
+            range_right = atomicCAS (&(this->internal_nodes.entered[this->toInternalRepresentation(apetrei_parent)]), INVALID, range_left);
             // printf ("Apetrei parent: %d\n", apetrei_parent);
             if (range_right == INVALID) {
                 return;
@@ -176,17 +176,17 @@ __device__ void BVHTree::updateParents(int i) {
                 // printf ("in tree bbmin rl: %f %f %f\n", bbMinRight.x, bbMinRight.y, bbMinRight.z);
             }
             else {
+                right_child = this->toInternalRepresentation(right_child);
                 float4 bbMinRight = this->getBBMinInternal (right_child);
                 float4 bbMaxRight = this->getBBMaxInternal (right_child);
                 this->growBox(bbMinRight, bbMaxRight, &bbMinCurrent, &bbMaxCurrent);
                 // printf ("in tree bbmin ll: %f %f %f\n", bbMinRight.x, bbMinRight.y, bbMinRight.z);
 
-                // right_child = this->toInternalRepresentation(right_child);
             }
         }
         else {
             int const apetrei_parent = range_left - 1;
-            range_left = atomicCAS (&(this->internal_nodes.entered[apetrei_parent]), INVALID, range_right);
+            range_left = atomicCAS (&(this->internal_nodes.entered[this->toInternalRepresentation(apetrei_parent)]), INVALID, range_right);
             // printf ("Apetrei parent: %d\n", apetrei_parent);
 
             if (range_left == INVALID){
@@ -207,15 +207,16 @@ __device__ void BVHTree::updateParents(int i) {
                 this->growBox(bbMinLeft, bbMaxLeft, &bbMinCurrent, &bbMaxCurrent);
             }
             else {
+                left_child = this->toInternalRepresentation(left_child);
                 float4 bbMinLeft = this->getBBMinInternal (left_child);
                 float4 bbMaxLeft = this->getBBMaxInternal (left_child);
                 this->growBox(bbMinLeft, bbMaxLeft, &bbMinCurrent, &bbMaxCurrent);
 
-                left_child = this->toInternalRepresentation(left_child);
             }
         }
 
-        int const karras_parent = delta_right < delta_left ? range_right : range_left;
+        int karras_parent = delta_right < delta_left ? range_right : range_left;
+        karras_parent = this->toInternalRepresentation(karras_parent);
         // printf ("karras_parent: %d\n", karras_parent);
         // if (karras_parent == range_left) {
         //     left_child = i;
@@ -241,7 +242,7 @@ __device__ void BVHTree::updateParents(int i) {
 
         // printf ("INDEX, %d, internal rope: %d\n", index, inodes->rope[karras_parent]);
 
-        i = this->toInternalRepresentation(karras_parent);
+        i = karras_parent;
 
         if (i < 0) {
             printf ("Error: i is negative: %d\n", i);
@@ -322,43 +323,26 @@ __host__ __device__ bool overlapingAABBs(float4 bbMin1, float4 bbMax1, float4 bb
 
 __host__ __device__ void BVHTree::query (Ray &ray, CandidateList &candidates) {
     int current_node = this->toInternalRepresentation(0);
-
-    // printf ("Current node init: %d\n", current_node);
-
+    
     do {
-        if (this->isLeaf(current_node)) {
-            // printf ("Current node leaf: %d\n", current_node);
+        float4 bbMax = this->getBBMaxLeaf ((current_node));
+        float4 bbMin = this->getBBMinLeaf ((current_node));
+        bool intersects = ray.intersects(bbMin, bbMax);
 
-            float4 bbMax = this->getBBMaxLeaf ((current_node));
-            float4 bbMin = this->getBBMinLeaf ((current_node));
-            // printf ("bbMin: %f %f %f\n", bbMin.x, bbMin.y, bbMin.z);
-            // printf ("bbMax: %f %f %f\n", bbMax.x, bbMax.y, bbMax.z);
-            // float4 tail = ray.getTail();
-            // printf ("Tail: %f %f %f\n", tail.x, tail.y, tail.z);
-            if (ray.intersects(bbMin, bbMax)) {
-                if (candidates.count < MAX_COLLISIONS) {
-                    candidates.collisions[candidates.count++] = current_node;
-                }
-                else {
-                    // printf ("Max collisions reached %d\n", current_node);
+        if (intersects) {
+            if (this->isLeaf(current_node)) {
+                if (candidates.count == MAX_COLLISIONS) {
                     return;
                 }
-            }
-            current_node = this->getRopeLeaf (current_node);
-        }
-        else {
-            current_node = this->toOriginalRepresentation(current_node);
-            float4 bbMin = this->getBBMinInternal (current_node);
-            float4 bbMax = this->getBBMaxInternal (current_node);
-            // printf ("Current node internal: %d\n", current_node);
-            if (ray.intersects(bbMin, bbMax)) {
-                // printf ("Current node inter: %d\n", current_node);
-                current_node = this->getLeftChild (current_node);
+                candidates.collisions[candidates.count++] = current_node;
+                current_node = this->getRopeLeaf(current_node);
             }
             else {
-                // printf ("Current node descend: %d\n", current_node);
-                current_node = this->getRopeInternal (current_node);
+                current_node = this->getLeftChild(current_node);
             }
+        }
+        else {
+            current_node = this->getRopeLeaf(current_node);
         }
     }
     while (current_node != SENTINEL);

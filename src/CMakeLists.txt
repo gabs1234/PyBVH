@@ -51,14 +51,14 @@ vtk_module_autoinit(
 set_target_properties(UnitTestBVH PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     # CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    # CUDA_ARCHITECTURES "60;70;75;80"  # Adjust based on your GPU's architecture
+    CUDA_ARCHITECTURES "80"  # Adjust based on your GPU's architecture
 )
 
 # Specify target properties (optional)
 set_target_properties(UnitTestRay PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    # CUDA_ARCHITECTURES "60;70;75;80"  # Adjust based on your GPU's architecture
+    CUDA_ARCHITECTURES "80"  # Adjust based on your GPU's architecture
 )
 
 # Add Debug flag

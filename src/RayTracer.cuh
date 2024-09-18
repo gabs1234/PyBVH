@@ -22,6 +22,17 @@ public:
     __host__ __device__ bool hasParallelGeometry() { return this->parallelGeometry; };
     __host__ __device__ float4* getVertices() { return this->vertices; };
 
+    __host__ __device__ float4 phi (int i, int j, float2 D, uint2 N) {
+        float delta_x = D.x / (N.x-1);
+        float delta_y = D.y / (N.y-1);
+        float Dx2 = D.x / 2;
+        float Dy2 = D.y / 2;
+
+        float x = -Dx2 + i * delta_x;
+        float y = -Dy2 + j * delta_y;
+        return make_float4(x, y, 0.0, 0);
+    }
+
     __device__ float traceRayParallel(Ray &ray);
 
     __host__ __device__ void testSingleRay(Ray ray, CollisionList *collisions);
@@ -57,4 +68,4 @@ private:
 
 __global__ void projectPlaneRaysKernel (
     RayTracer *tracer, float *image, uint2 N, float2 D,
-    float4 spherical, float4 euler, float4 meshOrigin);
+    BasisNamespace::Basis projectionPlaneBasis);

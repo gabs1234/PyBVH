@@ -1458,3 +1458,87 @@ events:
         
       exitCode: 0
 ...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/FindMPI.cmake:1278 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/FindMPI.cmake:1322 (_MPI_try_staged_settings)"
+      - "/usr/share/cmake-3.28/Modules/FindMPI.cmake:1645 (_MPI_check_lang_works)"
+      - "/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1/VTK-vtk-module-find-packages.cmake:397 (find_package)"
+      - "/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1/vtk-config.cmake:150 (include)"
+      - "CMakeLists.txt:14 (find_package)"
+    description: "The MPI test test_mpi for C in mode normal"
+    directories:
+      source: "/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D"
+      binary: "/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "native"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1/patches/99;/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1"
+    buildResult:
+      variable: "MPI_RESULT_C_test_mpi_normal"
+      cached: true
+      stdout: |
+        Change Dir: '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_b4b3b/fast
+        gmake[1]: Entering directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_b4b3b.dir/build.make CMakeFiles/cmTC_b4b3b.dir/build
+        gmake[2]: Entering directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D'
+        Building C object CMakeFiles/cmTC_b4b3b.dir/test_mpi.c.o
+        /usr/bin/cc  -isystem /usr/lib/x86_64-linux-gnu/openmpi/include -isystem /usr/lib/x86_64-linux-gnu/openmpi/include/openmpi  -o CMakeFiles/cmTC_b4b3b.dir/test_mpi.c.o -c /home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D/test_mpi.c
+        Linking C executable cmTC_b4b3b
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b4b3b.dir/link.txt --verbose=1
+        /usr/bin/cc -L/usr/lib/x86_64-linux-gnu/openmpi/lib CMakeFiles/cmTC_b4b3b.dir/test_mpi.c.o -o cmTC_b4b3b  /usr/lib/x86_64-linux-gnu/libmpi.so 
+        gmake[2]: Leaving directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D'
+        gmake[1]: Leaving directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-N3OZ6D'
+        
+      exitCode: 0
+...
+
+---
+events:
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "/usr/share/cmake-3.28/Modules/FindMPI.cmake:1278 (try_compile)"
+      - "/usr/share/cmake-3.28/Modules/FindMPI.cmake:1322 (_MPI_try_staged_settings)"
+      - "/usr/share/cmake-3.28/Modules/FindMPI.cmake:1645 (_MPI_check_lang_works)"
+      - "/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1/VTK-vtk-module-find-packages.cmake:397 (find_package)"
+      - "/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1/vtk-config.cmake:150 (include)"
+      - "CMakeLists.txt:14 (find_package)"
+    description: "The MPI test test_mpi for C in mode normal"
+    directories:
+      source: "/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav"
+      binary: "/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav"
+    cmakeVariables:
+      CMAKE_CUDA_ARCHITECTURES: "native"
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+      CMAKE_MODULE_PATH: "/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1/patches/99;/usr/lib/x86_64-linux-gnu/cmake/vtk-9.1"
+    buildResult:
+      variable: "MPI_RESULT_C_test_mpi_normal"
+      cached: true
+      stdout: |
+        Change Dir: '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav'
+        
+        Run Build Command(s): /usr/bin/cmake -E env VERBOSE=1 /usr/bin/gmake -f Makefile cmTC_5278f/fast
+        gmake[1]: Entering directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav'
+        /usr/bin/gmake  -f CMakeFiles/cmTC_5278f.dir/build.make CMakeFiles/cmTC_5278f.dir/build
+        gmake[2]: Entering directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav'
+        Building C object CMakeFiles/cmTC_5278f.dir/test_mpi.c.o
+        /usr/bin/cc  -isystem /usr/lib/x86_64-linux-gnu/openmpi/include -isystem /usr/lib/x86_64-linux-gnu/openmpi/include/openmpi  -o CMakeFiles/cmTC_5278f.dir/test_mpi.c.o -c /home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav/test_mpi.c
+        Linking C executable cmTC_5278f
+        /usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5278f.dir/link.txt --verbose=1
+        /usr/bin/cc -L/usr/lib/x86_64-linux-gnu/openmpi/lib CMakeFiles/cmTC_5278f.dir/test_mpi.c.o -o cmTC_5278f  /usr/lib/x86_64-linux-gnu/libmpi.so 
+        gmake[2]: Leaving directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav'
+        gmake[1]: Leaving directory '/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/CMakeScratch/TryCompile-0cjNav'
+        
+      exitCode: 0
+...
