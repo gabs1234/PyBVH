@@ -1,1 +1,0 @@
-/usr/bin/g++ @CMakeFiles/UnitTestBVH.dir/objects1.rsp CMakeFiles/UnitTestBVH.dir/cmake_device_link.o -o UnitTestBVH @CMakeFiles/UnitTestBVH.dir/linkLibs.rsp -L"/usr/local/cuda-12.6/targets/x86_64-linux/lib/stubs" -L"/usr/local/cuda-12.6/targets/x86_64-linux/lib"

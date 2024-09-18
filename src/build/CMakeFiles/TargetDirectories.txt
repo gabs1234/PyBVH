@@ -1,4 +1,0 @@
-/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/UnitTestRay.dir
-/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/UnitTestBVH.dir
-/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/edit_cache.dir
-/home/lt0649/Dev/PyBVH/src/build/CMakeFiles/rebuild_cache.dir

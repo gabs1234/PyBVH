@@ -4,5 +4,6 @@ src/blender/*
 src/.vscode/*
 src/__pycache__/
 src/build/
+src/test/
 src/graphviz/*
 src/test/vgcore.43557
