@@ -18,7 +18,7 @@ class CudaTimer:
     def elapsedTime(self) -> float:
         assert not self._isRunning, "CudaTimer is still running"
         self._stop.synchronize()
-        time = get_elapsed_time(self._start, self._stop)
+        time = get_elapsed_time(self._start, self._stop) # ms
         return time
 
     def reset(self):

@@ -1,9 +1,9 @@
 #pragma once
-#include <cstdio>
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <iostream>
-#include <cmath>
+// #include <cstdio>
+// #include <cuda.h>
+// #include <cuda_runtime.h>
+// #include <iostream>
+// #include <cmath>
 
 #define MAX_COLLISIONS 256
 #define EPSILON 0.00001
@@ -65,30 +65,12 @@ do { \
     (destination).z = __shfl((source)[2], (index)); \
 } while (0);
 
-#define cudaCheckError(ans) { cudaAssert((ans), __FILE__, __LINE__); }
-inline void cudaAssert(cudaError_t code, const char *file, int line, bool abort = true)
-{
-    if (code != cudaSuccess) 
-    {
-        std::cerr << "CUDA Error: " << cudaGetErrorString(code) << " in " << file << " at line " << line << std::endl;
-        if (abort) exit(code);
-    }
-}
-
-#define CUDA_KERNEL_LAUNCH_CHECK()                                                                                     \
-  do {                                                                                                                 \
-    const auto cuda_err = cudaGetLastError();                                                                          \
-    if (cuda_err != cudaSuccess) {                                                                                     \
-      throw std::runtime_error(std::string("CUDA kernel launch failed! ") + cudaGetErrorString(cuda_err));             \
-    }                                                                                                                  \
-  } while (0)
-
-__host__ __device__ inline float xor_signmask(float x, int y)
+__device__ inline float xor_signmask(float x, int y)
 {
     return (float)(int(x) ^ y);
 }
 
-__host__ __device__ inline float4 sub4(float4 a, float4 b)
+__device__ inline float4 sub4(float4 a, float4 b)
 {
     float4 c;
     c.x = a.x - b.x;
@@ -98,7 +80,7 @@ __host__ __device__ inline float4 sub4(float4 a, float4 b)
     return c;
 }
 
-__host__ __device__ inline float4 abs4(float4 a)
+__device__ inline float4 abs4(float4 a)
 {
     float4 c;
     c.x = fabs(a.x);
@@ -108,7 +90,7 @@ __host__ __device__ inline float4 abs4(float4 a)
     return c;
 }
 
-__host__ __device__ inline float4 min4(float4 a, float4 b)
+__device__ inline float4 min4(float4 a, float4 b)
 {
     float4 c;
     c.x = fminf(a.x, b.x);
@@ -118,7 +100,7 @@ __host__ __device__ inline float4 min4(float4 a, float4 b)
     return c;
 }
 
-__host__ __device__ inline float4 max4(float4 a, float4 b)
+__device__ inline float4 max4(float4 a, float4 b)
 {
     float4 c;
     c.x = fmaxf(a.x, b.x);
@@ -128,7 +110,7 @@ __host__ __device__ inline float4 max4(float4 a, float4 b)
     return c;
 }
 
-__host__ __device__ inline float4 cross4 (float4 a, float4 b) // cross product between two 3D vectors
+__device__ inline float4 cross4 (float4 a, float4 b) // cross product between two 3D vectors
 { 
     float4 c;
     c.x = a.y * b.z - a.z * b.y;
@@ -138,12 +120,12 @@ __host__ __device__ inline float4 cross4 (float4 a, float4 b) // cross product b
     return c;
 }
 
-__host__ __device__ inline float dot4(float4 a, float4 b)
+__device__ inline float dot4(float4 a, float4 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-__host__ __device__ inline float4 normalize4(float4 a)
+__device__ inline float4 normalize4(float4 a)
 {
     float invLen = rsqrtf(dot4(a, a));
     float norm = 1.0f / invLen;
@@ -151,7 +133,7 @@ __host__ __device__ inline float4 normalize4(float4 a)
 }
 
 
-__host__ __device__ inline int maxDimIndex(const float4 &D)
+__device__ inline int maxDimIndex(const float4 &D)
 {
     if (D.x > D.y)
     {
@@ -177,7 +159,7 @@ __host__ __device__ inline int maxDimIndex(const float4 &D)
     }
 }
 
-__host__ __device__ inline float4 permuteVectorAlongMaxDim(float4 v, unsigned int shift)
+__device__ inline float4 permuteVectorAlongMaxDim(float4 v, unsigned int shift)
 {
     float4 c = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -220,7 +202,7 @@ __host__ __device__ inline float4 permuteVectorAlongMaxDim(float4 v, unsigned in
 /// <param name="numberOfTriangles"> Number of triangles contained in the BVH. </param>
 ///
 /// <returns> true if the index corresponds to an internal node, false otherwise. </returns>
-__forceinline__ __host__ __device__ bool isInternalNode(unsigned int index,
+__forceinline__  __device__ bool isInternalNode(unsigned int index,
         unsigned int numberOfTriangles)
 {
     return (index < numberOfTriangles - 1);
@@ -234,7 +216,7 @@ __forceinline__ __host__ __device__ bool isInternalNode(unsigned int index,
 /// <param name="numberOfTriangles"> Number of triangles contained in the BVH. </param>
 ///
 /// <returns> true if the index corresponds to a leaf node, false otherwise. </returns>
-__forceinline__ __host__ __device__ bool isLeaf(unsigned int index, unsigned int numberOfTriangles)
+__forceinline__  __device__ bool isLeaf(unsigned int index, unsigned int numberOfTriangles)
 {
     return !isInternalNode(index, numberOfTriangles);
 }
@@ -247,7 +229,7 @@ __forceinline__ __host__ __device__ bool isLeaf(unsigned int index, unsigned int
 /// <param name="bbMax"> The bounding box maximum. </param>
 ///
 /// <returns> The calculated bounding box surface area. </returns>
-__forceinline__ __host__ __device__ float calculateBoundingBoxSurfaceArea(float4 bbMin,
+__forceinline__  __device__ float calculateBoundingBoxSurfaceArea(float4 bbMin,
         float4 bbMax)
 {
     float4 size;
@@ -265,7 +247,7 @@ __forceinline__ __host__ __device__ float calculateBoundingBoxSurfaceArea(float4
 /// <param name="bbMax"> The bounding box maximum. </param>
 ///
 /// <returns> The calculated bounding box surface area. </returns>
-__forceinline__ __host__ __device__ float calculateBoundingBoxSurfaceArea(const float* bbMin,
+__forceinline__  __device__ float calculateBoundingBoxSurfaceArea(const float* bbMin,
         const float* bbMax)
 {
     float4 size;
@@ -286,7 +268,7 @@ __forceinline__ __host__ __device__ float calculateBoundingBoxSurfaceArea(const 
 /// <param name="bbMax2"> Second bounding box maximum. </param>
 ///
 /// <returns> The calculated bounding box surface area. </returns>
-__forceinline__ __host__ __device__ float calculateBoundingBoxAndSurfaceArea(const float4 bbMin1,
+__forceinline__  __device__ float calculateBoundingBoxAndSurfaceArea(const float4 bbMin1,
         const float4 bbMax1, const float4 bbMin2, const float4 bbMax2)
 {
     float4 size;
@@ -305,7 +287,7 @@ __forceinline__ __host__ __device__ float calculateBoundingBoxAndSurfaceArea(con
 /// <param name="vertex1">  [out] The first vertex. </param>
 /// <param name="vertex2">  [out] The second vertex. </param>
 /// <param name="vertex3">  [out] The third vertex. </param>
-__forceinline__ __host__ __device__ void loadTriangle(int index, const float4* vertices, 
+__forceinline__  __device__ void loadTriangle(int index, const float4* vertices, 
         float4* vertex1, float4* vertex2, float4* vertex3)
 {
     *vertex1 = vertices[index * 3];
@@ -322,27 +304,27 @@ __forceinline__ __host__ __device__ void loadTriangle(int index, const float4* v
 /// <param name="vertex3">        The third vertex. </param>
 /// <param name="boundingBoxMin"> [out] The bounding box minimum. </param>
 /// <param name="boundingBoxMax"> [out] The bounding box maximum. </param>
-__forceinline__ __host__ __device__ void calculateTriangleBoundingBox(float4 vertex1,
-        float4 vertex2, float4 vertex3, float4* boundingBoxMin, float4* boundingBoxMax)
+__forceinline__  __device__ void calculateTriangleBoundingBox(
+    float4 const &vertex1, float4 const &vertex2, float4 const &vertex3, float4 &boundingBoxMin, float4 &boundingBoxMax)
 {
-    boundingBoxMin->x = min(vertex1.x, vertex2.x);
-    boundingBoxMin->x = min(boundingBoxMin->x, vertex3.x);
-    boundingBoxMax->x = max(vertex1.x, vertex2.x);
-    boundingBoxMax->x = max(boundingBoxMax->x, vertex3.x);
+    boundingBoxMin.x = min(vertex1.x, vertex2.x);
+    boundingBoxMin.x = min(boundingBoxMin.x, vertex3.x);
+    boundingBoxMax.x = max(vertex1.x, vertex2.x);
+    boundingBoxMax.x = max(boundingBoxMax.x, vertex3.x);
 
-    boundingBoxMin->y = min(vertex1.y, vertex2.y);
-    boundingBoxMin->y = min(boundingBoxMin->y, vertex3.y);
-    boundingBoxMax->y = max(vertex1.y, vertex2.y);
-    boundingBoxMax->y = max(boundingBoxMax->y, vertex3.y);
+    boundingBoxMin.y = min(vertex1.y, vertex2.y);
+    boundingBoxMin.y = min(boundingBoxMin.y, vertex3.y);
+    boundingBoxMax.y = max(vertex1.y, vertex2.y);
+    boundingBoxMax.y = max(boundingBoxMax.y, vertex3.y);
 
-    boundingBoxMin->z = min(vertex1.z, vertex2.z);
-    boundingBoxMin->z = min(boundingBoxMin->z, vertex3.z);
-    boundingBoxMax->z = max(vertex1.z, vertex2.z);
-    boundingBoxMax->z = max(boundingBoxMax->z, vertex3.z);
+    boundingBoxMin.z = min(vertex1.z, vertex2.z);
+    boundingBoxMin.z = min(boundingBoxMin.z, vertex3.z);
+    boundingBoxMax.z = max(vertex1.z, vertex2.z);
+    boundingBoxMax.z = max(boundingBoxMax.z, vertex3.z);
 }
 
 
-__host__ __device__ inline float4 getBoundingBoxCentroid(float4 bboxMin, float4 bboxMax)
+__device__ inline float4 getBoundingBoxCentroid(float4 bboxMin, float4 bboxMax)
 {
     float4 centroid;
 
@@ -363,7 +345,7 @@ __host__ __device__ inline float4 getBoundingBoxCentroid(float4 bboxMin, float4 
 /// <param name="index">  Coordinate index. </param>
 ///
 /// <returns> The coordinate value. </returns>
-__forceinline__ __host__ __device__ float getCoordinate(float4 source, int index)
+__forceinline__  __device__ float getCoordinate(float4 source, int index)
 {
     if (index == 0)
     {
@@ -386,7 +368,7 @@ __forceinline__ __host__ __device__ float getCoordinate(float4 source, int index
 /// <param name="source"> [out] Source vector. </param>
 /// <param name="index">  Coordinate index. </param>
 /// <param name="value">  Value. </param>
-__forceinline__ __host__ __device__ void setCoordinate(float4* source, int index, float value)
+__forceinline__  __device__ void setCoordinate(float4* source, int index, float value)
 {
     if (index == 0)
     {
@@ -410,7 +392,7 @@ __forceinline__ __host__ __device__ void setCoordinate(float4* source, int index
 /// <param name="v2"> v2. </param>
 ///
 /// <returns> v1 - v2. </returns>
-__forceinline__ __host__ __device__ float4 subtract(float4 v1, float4 v2)
+__forceinline__  __device__ float4 subtract(float4 v1, float4 v2)
 {
     float4 result;
     result.x = v1.x - v2.x;
@@ -427,7 +409,7 @@ __forceinline__ __host__ __device__ float4 subtract(float4 v1, float4 v2)
 /// <param name="v2"> v2. </param>
 ///
 /// <returns> v1 x v2. </returns>
-__forceinline__ __host__ __device__ float4 cross(float4 v1, float4 v2)
+__forceinline__  __device__ float4 cross(float4 v1, float4 v2)
 {
     float4 result;
     result.x = v1.y * v2.z - v1.z * v2.y;
@@ -443,7 +425,7 @@ __forceinline__ __host__ __device__ float4 cross(float4 v1, float4 v2)
 /// <param name="source"> The source vector. </param>
 ///
 /// <returns> A float4. </returns>
-__forceinline__ __host__ __device__ float4 float4Fromfloat4(float4 source)
+__forceinline__  __device__ float4 float4Fromfloat4(float4 source)
 {
     float4 temp;
     temp.x = source.x;
@@ -460,7 +442,7 @@ __forceinline__ __host__ __device__ float4 float4Fromfloat4(float4 source)
 ///
 /// <param name="source"> The source vector. </param>
 /// <param name="destination"> The destination array. </param>
-__forceinline__ __host__ __device__ void floatArrayFromFloat4(float4 source, float* destination)
+__forceinline__  __device__ void floatArrayFromFloat4(float4 source, float* destination)
 {
     destination[0] = source.x;
     destination[1] = source.y;
@@ -473,7 +455,7 @@ __forceinline__ __host__ __device__ void floatArrayFromFloat4(float4 source, flo
 ///
 /// <param name="source"> The source array. </param>
 /// <param name="destination"> The destination vector. </param>
-__forceinline__ __host__ __device__ void float4FromFromFloatArray(const float* source, 
+__forceinline__  __device__ void float4FromFromFloatArray(const float* source, 
         float4& destination)
 {
     destination.x = source[0];
@@ -492,7 +474,7 @@ __forceinline__ __host__ __device__ void float4FromFromFloatArray(const float* s
 /// <param name="boundingBoxMax"> The bounding box maximum. </param>
 ///
 /// <returns> Normalized position. </returns>
-__forceinline__ __host__ __device__ float4 normalize(float4 point, float4 boundingBoxMin,
+__forceinline__  __device__ float4 normalize(float4 point, float4 boundingBoxMin,
         float4 boundingBoxMax)
 {
     float4 normalized;
@@ -511,7 +493,7 @@ __forceinline__ __host__ __device__ float4 normalize(float4 point, float4 boundi
 /// <param name="bboxMax">    The bounding box maximum. </param>
 ///
 /// <returns> The un-normalized value. </returns>
-__forceinline__ __host__ __device__ float4 denormalize(float4 normalized, float4 bboxMin,
+__forceinline__  __device__ float4 denormalize(float4 normalized, float4 bboxMin,
         float4 bboxMax)
 {
     float4 point;
@@ -528,7 +510,7 @@ __forceinline__ __host__ __device__ float4 denormalize(float4 normalized, float4
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The expanded value. </returns>
-__forceinline__ __host__ __device__ unsigned int expandBits(unsigned int value)
+__forceinline__  __device__ unsigned int expandBits(unsigned int value)
 {
     value = (value * 0x00010001u) & 0xFF0000FFu;
     value = (value * 0x00000101u) & 0x0F00F00Fu;
@@ -544,7 +526,7 @@ __forceinline__ __host__ __device__ unsigned int expandBits(unsigned int value)
 /// <param name="point"> The point. </param>
 ///
 /// <returns> The calculated morton code. </returns>
-// __forceinline__ __host__ __device__ unsigned int calculateMortonCode(float4 point)
+// __forceinline__  __device__ unsigned int calculateMortonCode(float4 point)
 // {
 //     // Discretize the unit cube into a 10 bit integer
 //     uint3 discretized;
@@ -559,8 +541,7 @@ __forceinline__ __host__ __device__ unsigned int expandBits(unsigned int value)
 //     return discretized.x * 4 + discretized.y * 2 + discretized.z;
 // }
 
-template <int N>
-__forceinline__ __host__ __device__ unsigned int expandBitsBy (unsigned int)
+template <int N>__forceinline__  __device__ unsigned int expandBitsBy (unsigned int)
 {
     static_assert(0 <= N && N < 10,
                 "expandBitsBy can only be used with values 0-9");
@@ -568,14 +549,12 @@ __forceinline__ __host__ __device__ unsigned int expandBitsBy (unsigned int)
     return 0; 
 }
 
-template <>
-__forceinline__ __host__ __device__ unsigned int expandBitsBy<0> (unsigned int x)
+template <>__forceinline__  __device__ unsigned int expandBitsBy<0> (unsigned int x)
 {
     return x;
 }
 
-template <>
-__forceinline__ __host__ __device__ unsigned int expandBitsBy<1> (unsigned int x)
+template <>__forceinline__  __device__ unsigned int expandBitsBy<1> (unsigned int x)
 {
     x &= 0x0000ffffu;
     x = (x ^ (x << 8)) & 0x00ff00ffu;
@@ -585,8 +564,7 @@ __forceinline__ __host__ __device__ unsigned int expandBitsBy<1> (unsigned int x
     return x;
 }
 
-template <>
-__forceinline__ __host__ __device__ unsigned int expandBitsBy<2> (unsigned int x)
+template <>__forceinline__  __device__ unsigned int expandBitsBy<2> (unsigned int x)
 {
     x &= 0x000003ffu;
     x = (x ^ (x << 16)) & 0xff0000ffu;
@@ -596,8 +574,7 @@ __forceinline__ __host__ __device__ unsigned int expandBitsBy<2> (unsigned int x
     return x;
 }
 
-template <>
-__forceinline__ __host__ __device__ unsigned int expandBitsBy<3> (unsigned int x)
+template <>__forceinline__  __device__ unsigned int expandBitsBy<3> (unsigned int x)
 {
     x &= 0xffu;
     x = (x | x << 16) & 0xc0003fu;
@@ -607,8 +584,7 @@ __forceinline__ __host__ __device__ unsigned int expandBitsBy<3> (unsigned int x
     x = (x | x << 1) & 0x11111111u;
     return x;
 }
-
-__forceinline__ __host__ __device__ unsigned int calculateMortonCode(float4 point)
+__forceinline__  __device__ unsigned int calculateMortonCode(float4 point)
 {
     // Discretize the unit cube into a 10 bit integer
     constexpr unsigned N = 1u << 10;
@@ -632,7 +608,7 @@ __forceinline__ __host__ __device__ unsigned int calculateMortonCode(float4 poin
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The compacted value. </returns>
-__forceinline__ __host__ __device__ unsigned int compactBits(unsigned int value)
+__forceinline__  __device__ unsigned int compactBits(unsigned int value)
 {
     unsigned int compacted = value;
     compacted &= 0x09249249;
@@ -651,7 +627,7 @@ __forceinline__ __host__ __device__ unsigned int compactBits(unsigned int value)
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ float decodeMortonCodeX(unsigned int value)
+__forceinline__  __device__ float decodeMortonCodeX(unsigned int value)
 {
     unsigned int expanded = compactBits(value >> 2);
 
@@ -666,7 +642,7 @@ __forceinline__ __host__ __device__ float decodeMortonCodeX(unsigned int value)
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ float decodeMortonCodeY(unsigned int value)
+__forceinline__  __device__ float decodeMortonCodeY(unsigned int value)
 {
     unsigned int expanded = compactBits(value >> 1);
 
@@ -681,7 +657,7 @@ __forceinline__ __host__ __device__ float decodeMortonCodeY(unsigned int value)
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ float decodeMortonCodeZ(unsigned int value)
+__forceinline__  __device__ float decodeMortonCodeZ(unsigned int value)
 {
     unsigned int expanded = compactBits(value);
 
@@ -695,7 +671,7 @@ __forceinline__ __host__ __device__ float decodeMortonCodeZ(unsigned int value)
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The expanded value. </returns>
-__forceinline__ __host__ __device__ unsigned long long int expandBits64(
+__forceinline__  __device__ unsigned long long int expandBits64(
         unsigned long long int value)
 {
     unsigned long long int expanded = value;
@@ -716,7 +692,7 @@ __forceinline__ __host__ __device__ unsigned long long int expandBits64(
 /// <param name="point"> The point. </param>
 ///
 /// <returns> The 63-bit morton code. </returns>
-__forceinline__ __host__ __device__ unsigned long long int calculateMortonCode64(float4 point)
+__forceinline__  __device__ unsigned long long int calculateMortonCode64(float4 point)
 {
     // Discretize the unit cube into a 10 bit integer
     unsigned long long int discretized[3];
@@ -739,7 +715,7 @@ __forceinline__ __host__ __device__ unsigned long long int calculateMortonCode64
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The compacted value. </returns>
-__forceinline__ __host__ __device__ unsigned long long int compactBits64(
+__forceinline__  __device__ unsigned long long int compactBits64(
         unsigned long long int value)
 {
     unsigned long long int compacted = value;
@@ -762,7 +738,7 @@ __forceinline__ __host__ __device__ unsigned long long int compactBits64(
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ float decodeMortonCode64X(unsigned long long int value)
+__forceinline__  __device__ float decodeMortonCode64X(unsigned long long int value)
 {
     unsigned long long int expanded = compactBits64(value >> 2);
 
@@ -777,7 +753,7 @@ __forceinline__ __host__ __device__ float decodeMortonCode64X(unsigned long long
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ float decodeMortonCode64Y(unsigned long long int value)
+__forceinline__  __device__ float decodeMortonCode64Y(unsigned long long int value)
 {
     unsigned long long int expanded = compactBits64(value >> 1);
 
@@ -792,7 +768,7 @@ __forceinline__ __host__ __device__ float decodeMortonCode64Y(unsigned long long
 /// <param name="value"> The value. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ float decodeMortonCode64Z(unsigned long long int value)
+__forceinline__  __device__ float decodeMortonCode64Z(unsigned long long int value)
 {
     unsigned long long int expanded = compactBits64(value);
 
@@ -808,7 +784,7 @@ __forceinline__ __host__ __device__ float decodeMortonCode64Z(unsigned long long
 /// <param name="groupBbMax"> Group bounding box maximum values. </param>
 /// <param name="newBbMin"> New bounding box minimum values. </param>
 /// <param name="newBbMax"> New bounding box maximum values. </param>
-__forceinline__ __host__ __device__ void expandBoundingBox(float4& groupBbMin, float4& groupBbMax, 
+__forceinline__  __device__ void expandBoundingBox(float4& groupBbMin, float4& groupBbMax, 
         const float4& newBbMin, const float4& newBbMax)
 {
     groupBbMin.x = min(newBbMin.x, groupBbMin.x);
@@ -831,7 +807,7 @@ __forceinline__ __host__ __device__ void expandBoundingBox(float4& groupBbMin, f
 /// <param name="lastElement"> Last element in the sequence. </param>
 ///
 /// <returns> The decoded value. </returns>
-__forceinline__ __host__ __device__ int sumArithmeticSequence(int numberOfElements, 
+__forceinline__  __device__ int sumArithmeticSequence(int numberOfElements, 
         int firstElement, int lastElement)
 {
     return numberOfElements * (firstElement + lastElement) / 2;
@@ -862,28 +838,28 @@ __device__ inline int device_sign_mask(float x)
 }
 
 // Host implementations
-__host__ inline float host_int_as_float(int i)
+inline float host_int_as_float(int i)
 {
     return *(float*)(&i);
 }
 
-__host__ inline int host_float_as_int(float f)
+inline int host_float_as_int(float f)
 {
     return *(int*)(&f);
 }
 
-__host__ inline float host_xorf(float x, int y)
+inline float host_xorf(float x, int y)
 {
     return host_int_as_float(host_float_as_int(x) ^ y);
 }
 
-__host__ inline int host_sign_mask(float x)
+inline int host_sign_mask(float x)
 {
     return host_float_as_int(x) & 0x80000000;
 }
 
 // Unified interface for both host and device
-__host__ __device__ inline float __iaf(int i)
+__device__ inline float __iaf(int i)
 {
 #ifdef __CUDA_ARCH__
     return device_int_as_float(i);
@@ -892,7 +868,7 @@ __host__ __device__ inline float __iaf(int i)
 #endif
 }
 
-__host__ __device__ inline int __fai(float f)
+__device__ inline int __fai(float f)
 {
 #ifdef __CUDA_ARCH__
     return device_float_as_int(f);
@@ -901,7 +877,7 @@ __host__ __device__ inline int __fai(float f)
 #endif
 }
 
-__host__ __device__ inline float xorf(float x, int y)
+__device__ inline float xorf(float x, int y)
 {
 #ifdef __CUDA_ARCH__
     return device_xorf(x, y);
@@ -910,7 +886,7 @@ __host__ __device__ inline float xorf(float x, int y)
 #endif
 }
 
-__host__ __device__ inline int sign_mask(float x)
+__device__ inline int sign_mask(float x)
 {
 #ifdef __CUDA_ARCH__
     return device_sign_mask(x);

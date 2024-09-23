@@ -21,8 +21,8 @@ class CudaPipeline:
             self.opts += options
     
     def readModuleFromFiles(self, 
+        moduleName : str,
         fileNames : list, 
-        moduleName : str, 
         options : list = None,
         name_expressions : list = None,
         backend : str = "nvcc",

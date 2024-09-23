@@ -1,6 +1,6 @@
 #include "Ray.cuh"
 
-__host__ __device__ Ray::Ray(const Ray &ray) {
+__device__ Ray::Ray(const Ray &ray) {
     this->tail = ray.tail;
     this->head = ray.head;
     this->direction = ray.direction;
@@ -10,7 +10,7 @@ __host__ __device__ Ray::Ray(const Ray &ray) {
     this->sign[2] = ray.sign[2];
     // printf ("Signs: %d, %d, %d\n", this->sign[0], this->sign[1], this->sign[2]);
 };
-__host__ __device__ Ray::Ray(float4 tail, float4 direction){
+__device__ Ray::Ray(float4 tail, float4 direction){
     this->tail = tail;
     this->direction = direction;
     this->updateInvDirection();
@@ -18,17 +18,17 @@ __host__ __device__ Ray::Ray(float4 tail, float4 direction){
     // this->print();
 };
 
-__host__ __device__ void Ray::print() {
+__device__ void Ray::print() {
     printf ("Ray: %f %f %f -> %f %f %f\n", this->tail.x, this->tail.y, this->tail.z, this->direction.x, this->direction.y, this->direction.z);
     printf ("InvDirection: %f %f %f\n", this->invDirection.x, this->invDirection.y, this->invDirection.z);
     printf ("Signs: %d, %d, %d\n", this->sign[0], this->sign[1], this->sign[2]);
 }
 
-__host__ __device__ float Ray::normalize(float4 &v) {
+__device__ float Ray::normalize(float4 &v) {
     return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
-__host__ __device__ void Ray::updateDirection() {
+__device__ void Ray::updateDirection() {
     float norm = this->normalize(this->direction);
     this->direction.x = this->head.x - this->tail.x;
     this->direction.y = this->head.y - this->tail.y;
@@ -39,17 +39,17 @@ __host__ __device__ void Ray::updateDirection() {
     this->direction.z /= norm;
 }
 
-__host__ __device__ void Ray::updateInvDirection() {
+__device__ void Ray::updateInvDirection() {
     this->invDirection = make_float4(1.0f / this->direction.x, 1.0f / this->direction.y, 1.0f / this->direction.z, 0.0f);
 }
 
-__host__ __device__ void Ray::updateSign() {
+__device__ void Ray::updateSign() {
     this->sign[0] = (this->invDirection.x < 0);
     this->sign[1] = (this->invDirection.y < 0);
     this->sign[2] = (this->invDirection.z < 0);
 }
 
-__host__ __device__ float4 Ray::computeParametric(float t) {
+__device__ float4 Ray::computeParametric(float t) {
     float4 P;
     P.x = this->tail.x + t * this->direction.x;
     P.y = this->tail.y + t * this->direction.y;
@@ -58,27 +58,27 @@ __host__ __device__ float4 Ray::computeParametric(float t) {
     return P;
 }
 
-__host__ __device__ void Ray::setTail(float4 &tail) {
+__device__ void Ray::setTail(float4 &tail) {
     this->tail = tail;
 }
-__host__ __device__ void Ray::setHead(float4 &head) {
+__device__ void Ray::setHead(float4 &head) {
     this->head = head;
 }
 
-__host__ __device__ void Ray::setDirection(float4 &direction) {
+__device__ void Ray::setDirection(float4 &direction) {
     this->direction = direction;
     this->updateInvDirection();
     this->updateSign();
 }
 
-__host__ __device__ void Ray::setInvDirection(float4 &invDirection) {
+__device__ void Ray::setInvDirection(float4 &invDirection) {
     this->invDirection = invDirection;
 }
 
 /**
  * Ray-box intersection
  */
-__host__ __device__ bool Ray::intersects (float4 const &minBbox, float4 const &maxBbox, float &tmin, float &tmax) {
+__device__ bool Ray::intersects (float4 const &minBbox, float4 const &maxBbox, float &tmin, float &tmax) {
     float4 bounds[2];
     bounds[0] = minBbox;
     bounds[1] = maxBbox;
@@ -120,7 +120,7 @@ __host__ __device__ bool Ray::intersects (float4 const &minBbox, float4 const &m
     return true;
 }
 
-__host__ __device__ bool Ray::intersects (float4 const &minBbox, float4 const &maxBbox) {
+__device__ bool Ray::intersects (float4 const &minBbox, float4 const &maxBbox) {
     float tmin = -1, tmax = -1;
     // intersects only if box is in front of the ray
     return this->intersects(minBbox, maxBbox, tmin, tmax) && (tmin >= 0.f);
@@ -128,7 +128,7 @@ __host__ __device__ bool Ray::intersects (float4 const &minBbox, float4 const &m
 
 
 
-// __host__ __device__ int findLargestComp(float const (&dir)[3]) {
+// __device__ int findLargestComp(float const (&dir)[3]) {
 //     int kz = 0;
 
 //     float max = abs(dir[0]);
@@ -145,20 +145,19 @@ __host__ __device__ bool Ray::intersects (float4 const &minBbox, float4 const &m
 //     return kz;
 // }
 
-__host__ __device__ void rotate2D (float const px, float const py, float const pz, 
-        float &rx, float &ry, float rz) {
-    float r = sqrt(px * px + py * py);
-    if (px != 0) {
-        rx = (px > 0 ? 1 : -1) * r;
-    }
-    else {
-        rx = (py > 0 ? 1 : -1) * r;
-    }
-    ry = pz;
-    rz = 0;
-}
+// __device__ void rotate2D (float const px, float const py, float const pz, float &rx, float &ry, float rz) {
+//     float r = sqrt(px * px + py * py);
+//     if (px != 0) {
+//         rx = (px > 0 ? 1 : -1) * r;
+//     }
+//     else {
+//         rx = (py > 0 ? 1 : -1) * r;
+//     }
+//     ry = pz;
+//     rz = 0;
+// }
 
-__host__ __device__ __forceinline__ bool rayEdgeIntersect (
+__device__ __forceinline__ bool rayEdgeIntersect (
     float const e1x, float const e1y,
     float const e2x, float const e2y,
     float &t) {
@@ -370,7 +369,7 @@ __device__ bool Ray::intersects(
 
 // computes the difference of products a*b - c*d using 
 // FMA instructions for improved numerical precision
-__host__ __device__ inline float diff_product(float a, float b, float c, float d) 
+__device__ inline float diff_product(float a, float b, float c, float d) 
 {
     float cd = c * d;
     float diff = fmaf(a, b, -cd);
@@ -380,7 +379,7 @@ __host__ __device__ inline float diff_product(float a, float b, float c, float d
 }
 
 // // http://jcgt.org/published/0002/01/05/
-// __host__ __device__ bool Ray::intersects(
+// __device__ bool Ray::intersects(
 //     float4 &V1_e, float4 &V2_e, float4 &V3_e, float &t)
 // {
 // 	// todo: precompute for ray

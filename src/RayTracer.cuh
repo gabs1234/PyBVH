@@ -1,6 +1,6 @@
-#include <thrust/sort.h>
-#include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
+// #include <thrust/sort.h>
+// #include <thrust/device_vector.h>
+// #include <thrust/execution_policy.h>
 
 #pragma once
 #include "tree_prokopenko.cuh"
